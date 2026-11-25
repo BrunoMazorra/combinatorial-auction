@@ -1,0 +1,1424 @@
+% Snapshot of main.tex taken on 2026-11-25: Section 5 built on general theorems (thinning, admissible reserve laws), 16 pages.
+% Not part of the build. To compile it, copy it over ../main.tex in the repository root.
+\documentclass[format=acmsmall, review=false]{acmart}
+\usepackage{acm-ec-26}
+\usepackage{booktabs} % For formal tables
+\usepackage[ruled]{algorithm2e} % For algorithms
+\usepackage{amsthm} % For theorem and remark environments
+% amssymb is not loaded: acmart's newtxmath already provides its symbols,
+% and loading both fails with "Command \Bbbk already defined".
+\usepackage{bbm}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\one}{\mathbb{1}}
+\renewcommand{\algorithmcfname}{ALGORITHM}
+\SetAlFnt{\small}
+\SetAlCapFnt{\small}
+\SetAlCapNameFnt{\small}
+\SetAlCapHSkip{0pt}
+\IncMargin{-\parindent}
+\newcommand{\OPT}{\mathrm{OPT}}
+\newcommand{\SW}{\mathrm{SW}}
+\newcommand{\eps}{\varepsilon}
+
+\usepackage{xcolor}
+
+\newcommand{\bruno}[1]{{\color{red}Bruno: #1}}
+% Choose a citation style by commenting/uncommenting the appropriate line:
+%\setcitestyle{acmnumeric}
+\setcitestyle{authoryear}
+
+% Title. Note the optional short title for running heads. In the interest of anonymization, please do not include any acknowledgements.
+\title[On sybil-proof combinatorial auctions]{Roses are red, violets are blue, and combinatorial false-name-proof auctions can be efficient too}
+
+% Anonymized submission.
+\author{Bruno Mazorra}
+
+% Abstract. Note that this must come before \maketitle.
+\begin{abstract}
+Iwasaki et al. \cite{iwasaki2010worst} show that, under anonymity, symmetry across goods, and independence of irrelevant goods (IIG), the optimal worst-case welfare approximation ratio of deterministic false-name-proof combinatorial auctions with single-minded bidders is $(m+1)/2$, where $m$ is the number of goods. In this paper, we make two contributions. First, we show that this bound continues to hold without the IIG assumption. Second, we show that allowing randomization substantially improves worst-case welfare. Specifically, we construct a randomized mechanism that is universally truthful, false-name-proof in expectation, runs in polynomial time, and achieves a worst-case welfare approximation ratio of $O(\sqrt{m}\log m)$. Our mechanism incurs only an additional $O(\log m)$ factor in welfare approximation compared to the classical greedy algorithm, showing that randomization makes false-name-proofness compatible with computational efficiency.
+\end{abstract}
+
+\begin{document}
+
+% Title page for title and abstract only.
+\begin{titlepage}
+\maketitle
+%\tableofcontents
+
+\end{titlepage}
+\section{Introduction}
+\section{Related work}
+\section{Model}
+\label{sec:model}
+
+We consider combinatorial auctions with a single seller, a set
+$M=[m]$ of indivisible goods, and a finite set $N$ of bidders,
+where $m\ge1$ and $n=|N|$. Bidder $i$ has a private type
+$\theta_i=(S_i,v_i)$, consisting of a nonempty target
+$S_i\subseteq M$ and a value $v_i\ge0$. With a slight abuse of
+notation, we also use $v_i$ for its single-minded valuation
+function: $v_i(R)=v_i\mathbf{1}\{S_i\subseteq R\}$ for every
+bundle $R\subseteq M$. We denote the type space by $\Theta_M$.
+Bidders are risk-neutral and have quasi-linear utilities:
+receiving $R$ and paying $P$ gives utility $v_i(R)-P$.
+
+
+A direct mechanism $\mathcal M=(X,P)$ maps a report profile
+$\hat\theta=(\hat\theta_i)_{i\in N}$, with
+$\hat\theta_i=(\hat S_i,b_i)\in\Theta_M$, to allocated bundles
+$X_i(\hat\theta)\subseteq M$ and payments $P_i(\hat\theta)$
+to the seller. The mechanism is defined for every finite set of
+participating identities, including the empty set. Allocations
+and payments may be randomized; all reports and identities are
+fixed before the randomness is realized. Throughout, we require
+\emph{ex-post feasibility}: for every report profile,
+$X_i(\hat\theta)\cap X_j(\hat\theta)=\varnothing$ almost surely
+for distinct $i,j$. Goods may remain unallocated. When no
+confusion can arise, we drop the hat on reported targets and
+write a report as $(S_i,b_i)$.
+
+Write $u_i(\theta_i;\hat\theta)
+=v_i(X_i(\hat\theta))-P_i(\hat\theta)$ for realized utility, and
+\[
+x_i(\hat\theta)
+=\Pr[\hat S_i\subseteq X_i(\hat\theta)],
+\qquad
+\pi_i(\hat\theta)=\mathbb{E}[P_i(\hat\theta)]
+\]
+for service probabilities and expected payments. At a truthful
+profile $\theta$, bidder $i$'s expected utility is
+$U_i(\theta)=\mathbb{E}[u_i(\theta_i;\theta)]
+=v_i x_i(\theta)-\pi_i(\theta)$.
+
+We require \emph{individual rationality} (IR) in expectation,
+meaning $U_i(\theta)\ge0$ for every bidder and type profile, and
+\emph{no positive transfers} (NPT), meaning
+$P_i(\hat\theta)\ge0$ almost surely for every report profile.
+The expectation in IR is only over the mechanism's randomness,
+with all other reports fixed, not over other bidders' types.
+Thus $0\le\pi_i(\hat\theta)\le b_i x_i(\hat\theta)$.
+For deterministic mechanisms, this is ex-post IR. For randomized
+mechanisms, \emph{ex-post IR} additionally requires truthful
+realized utility to be nonnegative almost surely.
+
+\subsection{Truthfulness and false-name-proofness}
+
+Let $E$ denote an arbitrary finite profile of external reports,
+and write $(\hat\theta_i,E)$ for the profile obtained by adding
+identity $i$ with report $\hat\theta_i$. A mechanism is
+\emph{truthful} if, for every true type $\theta_i$, alternative
+report $\hat\theta_i$, and external profile $E$,
+\[
+U_i(\theta_i,E)
+\ge
+\mathbb{E}\bigl[u_i(\theta_i;(\hat\theta_i,E))\bigr].
+\]
+For deterministic mechanisms, this is dominant-strategy
+incentive compatibility (DSIC); for randomized mechanisms, it is
+truthfulness in expectation. A deviation may change both the
+target bundle and its value. A randomized mechanism is
+\emph{universally truthful} if truthful reporting maximizes
+realized utility for every realization of its randomness, that
+is, if it is a distribution over DSIC mechanisms
+\citep{dobzinski2006truthful}.
+
+\emph{False-name-proofness} (FNP) \citep{yokoo2004effect} allows a
+physical bidder to
+replace its truthful report with any finite family of reports
+$\hat\theta_A=(\hat\theta_j)_{j\in A}$ under distinct identities
+$A$, its \emph{aliases}, not appearing in
+$E$. The bidder values the union of their allocations and pays
+the sum of their payments. We require
+\[
+U_i(\theta_i,E)
+\ge
+\mathbb{E}\!\left[
+  v_i\!\left(\bigcup_{j\in A}X_j(\hat\theta_A,E)\right)
+\right]
+-\sum_{j\in A}\pi_j(\hat\theta_A,E)
+\]
+for every true type, external profile, and finite report family.
+For randomized mechanisms, this is \emph{FNP in expectation};
+for deterministic mechanisms, the expectation disappears.
+The family may include the original identity, and different
+identities may submit identical reports. Creating identities
+is costless, and there is no bound on their number. We allow
+$A=\varnothing$, representing nonparticipation, with empty unions
+and sums interpreted as $\varnothing$ and zero. All submitted
+identities remain in the profile and all assessed payments must
+be paid: we consider ordinary FNP, without withdrawal. Taking
+$|A|=1$ recovers truthfulness.
+
+\subsection{Anonymity, symmetry, and irrelevant goods}
+
+A mechanism is \emph{anonymous in utilities} if relabelling
+bidders leaves their truthful expected utilities unchanged.
+For a bijection $\tau:N\to N'$, define
+$(\tau\theta)_{\tau(i)}=\theta_i$. Anonymity requires
+$U_{\tau(i)}(\tau\theta)=U_i(\theta)$ for every profile, bidder,
+and bijection. This definition applies to deterministic and
+randomized mechanisms alike, and permits identity-based
+tie-breaking when it leaves utilities unchanged.
+
+Separately, a mechanism is \emph{symmetric across goods} if
+$U_i(\sigma\theta)=U_i(\theta)$ for every bidder, profile, and
+permutation $\sigma$ of $M$. Here $\sigma\theta$ replaces each
+type $(S_j,v_j)$ by $(\sigma(S_j),v_j)$, so utilities on the
+left are evaluated using the relabelled targets.
+
+\begin{lemma}[Utility symmetry and critical prices]
+\label{lem:utility-symmetry}
+For a deterministic truthful mechanism satisfying IR and NPT,
+anonymity in utilities is equivalent to anonymity of critical
+prices. Likewise, symmetry across goods in utilities is
+equivalent to symmetry across goods of critical prices.
+\end{lemma}
+
+\begin{proof}
+Fix an identity $i$, an external profile $E$, and a target $S$.
+DSIC makes service monotone in the reported value and gives
+all served reports the same payment. IR and NPT imply that
+unserved reports pay zero and that the winning payment equals
+the critical price $c_{i,E}(S)$, the infimum of winning bids.
+Consequently,
+\[
+U_i((S,v),E)=\max\{0,v-c_{i,E}(S)\}.
+\]
+If the critical price is infinite, this utility is identically
+zero. At a finite critical price, winning and losing both give
+zero utility, so tie-breaking does not affect the formula.
+The critical price can therefore be recovered from utilities:
+\[
+c_{i,E}(S)
+=\inf\{v\ge0:U_i((S,v),E)>0\},
+\]
+with $\inf\varnothing=+\infty$. Thus invariance of utilities
+under either relabelling implies the corresponding invariance
+of critical prices; the converse follows from the utility
+formula. Under bidder anonymity, we may consequently write a
+common menu $c_E(S)$ depending only on $S$ and the multiset
+of external reports. Symmetry across goods further gives
+$c_{\sigma E}(\sigma(S))=c_E(S)$.
+\end{proof}
+
+For comparison with the deterministic benchmark of
+\cite[Definition~2]{iwasaki2010worst}, \emph{independence of
+irrelevant goods} (IIG) requires that, for sufficiently large
+values, a bidder winning the grand bundle continues to win the
+enlarged grand bundle when a new good is added only to its
+target, with all values and other targets unchanged.
+
+\subsection{Worst-case welfare}
+
+At a truthful profile $\theta$, realized welfare is
+$\mathrm{SW}_{\mathcal M}(\theta)=\sum_{i\in N}v_i(X_i(\theta))$,
+with expectation $\sum_{i\in N}v_i x_i(\theta)$, and optimal
+welfare is
+$\mathrm{OPT}(\theta)=\max_{A\text{ feasible}}\sum_{i\in N}v_i(A_i)$.
+For a fixed number $m$ of goods, we define the
+\emph{worst-case welfare fraction}\footnote{Its reciprocal is
+the usual worst-case welfare approximation ratio, with
+$1/0=+\infty$.} by the following infimum over all finite
+populations and type profiles on $m$ goods, taking the
+expectation over the mechanism's randomness at each fixed
+profile:
+\[
+\rho(\mathcal M)
+=
+\inf_{\theta:\,\mathrm{OPT}(\theta)>0}
+\frac{\mathbb{E}[\mathrm{SW}_{\mathcal M}(\theta)]}
+     {\mathrm{OPT}(\theta)}.
+\]
+\section{Worst-case welfare of deterministic mechanisms}
+\label{sec:deterministic}
+
+Throughout this section, the mechanism is deterministic, feasible,
+ex-post IR and NPT, DSIC, and ordinary FNP.  It is defined for
+every finite population and admits a common bidder-anonymous critical-price
+menu, equivariant under permutations of the goods
+(Lemma~\ref{lem:utility-symmetry}); as there, we write $c_E(S)$ for this menu at
+external profile $E$.  Thus bids strictly above $c_E(S)$ are served, bids
+strictly below it are not served, and a winner pays $c_E(S)$; behavior
+at equality is fixed by the tie rule.  We do not assume independence of
+irrelevant goods.
+
+If $\rho(\mathcal M)>0$, every critical price is finite.  Indeed, if
+$c_E(S)=\infty$, then a bidder with target $S$ loses at every finite
+value $v$.  The mechanism's welfare is at most $\OPT(E)$, whereas the new
+optimum is at least $v$; sending $v\to\infty$ contradicts a positive ratio.
+We use this observation without further comment.
+
+The following inequality is the basic deterministic consequence of
+false-name-proofness.
+
+\begin{lemma}[False-name cover inequality]
+\label{lem:det-cover}
+Fix an external profile $E$ and a true target $S$.  Let $\hat\theta_A$ be a
+finite false-name family with reports $(S_j,b_j)$, $j\in A$, and let
+$D\subseteq A$ be the aliases that win.  If their allocations cover $S$, then
+\begin{equation}
+  c_E(S)
+  \le
+  \sum_{j\in D}
+  c_{E\cup\hat\theta_{A\setminus\{j\}}}(S_j).
+  \label{eq:det-cover}
+\end{equation}
+Every losing alias remains in the price context on the right-hand side.
+\end{lemma}
+
+\begin{proof}
+Give the physical bidder a true value $v>c_E(S)$.  Truthful reporting
+then gives utility $v-c_E(S)$.  Under the false-name profile, the winning
+aliases cover $S$, so the physical value is again $v$.  Losing aliases
+pay zero by IR and NPT, while each winner pays the critical price shown
+in \eqref{eq:det-cover}.  False-name-proofness lets the common value $v$
+cancel and gives the inequality.
+\end{proof}
+
+For $h>0$, write $H_h=(M,h)$ for the grand-bundle report of value $h$.
+Goods equivariance gives a common clean singleton price
+\[
+  t(h)=c_{\{H_h\}}(\{g\}),
+  \qquad g\in M.
+\]
+
+\begin{lemma}[Clean prices have a near-flat pair]
+\label{lem:no-iig-flat}
+For every $h>0$, $0<t(h)<\infty$.  Moreover, for every $\eps>0$ there exist
+$h<h'$ in $[1,2]$ such that
+\begin{equation}
+  t(h')\le(1+\eps)t(h).
+  \label{eq:near-flat}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Finiteness was established above.  If $t(h)=0$, then every singleton bid
+$\delta>0$ strictly wins against $H_h$.  Feasibility forces the grand-bundle
+bidder to lose, so the welfare ratio on this two-bidder profile is at most
+$\delta/h$.  Letting $\delta\downarrow0$ contradicts positivity.
+
+For the second claim, fix an integer $\ell\ge1$ and consider the grid
+points $1+s/\ell$, $s=0,\ldots,\ell$.  If every adjacent pair satisfied
+$t(1+(s+1)/\ell)>(1+\eps)\,t(1+s/\ell)$, then
+\[
+  t(2)>(1+\eps)^\ell\, t(1).
+\]
+Because both endpoint prices are positive and finite, this fails for all
+sufficiently large $\ell$.  One adjacent pair therefore satisfies
+\eqref{eq:near-flat}.
+\end{proof}
+
+The next lemma is the replacement for IIG.  A collection of singleton bids
+below half the clean price can neither lower another singleton's price nor
+co-win with a higher singleton.
+
+\begin{lemma}[Half-price persistence]
+\label{lem:no-iig-half}
+Fix $h>0$ and a good $g$, write $t=t(h)$, and choose $\lambda<t/2$.  Let $L$
+be any family of distinct singleton reports, all of value $\lambda$, on goods
+other than $g$.  Then
+\begin{equation}
+  c_{\{H_h\}\cup L}(\{g\})\ge t.
+  \label{eq:no-iig-half}
+\end{equation}
+Moreover, if $(\{g\},y)$ wins against $\{H_h\}\cup L$ for some $y>\lambda$, no
+report in $L$ co-wins.
+\end{lemma}
+
+\begin{proof}
+We induct on $|L|$, proving the price bound and the no-co-winner statement
+together.  Both are immediate when $L=\varnothing$.
+
+Assume the result for every smaller family.  Suppose that $(\{g\},y)$ and a
+low report $(\{g'\},\lambda)\in L$ both win.  Put
+\[
+  L'=L\setminus\{(\{g'\},\lambda)\},
+  \qquad
+  \gamma=c_{\{H_h,(\{g\},y)\}\cup L'}(\{g'\}).
+\]
+Because the low report wins, $\gamma\le\lambda<y$.  Raise its bid from
+$\lambda$ to $y$.
+Its own critical price remains $\gamma$, so it still wins.  Swapping goods
+$g$ and $g'$ fixes $H_h$ and every report in $L'$; goods equivariance
+therefore gives
+\[
+  c_{\{H_h,(\{g'\},y)\}\cup L'}(\{g\})=\gamma.
+\]
+Thus, against the smaller external profile $\{H_h\}\cup L'$, the two reports
+$(\{g\},y)$ and $(\{g'\},y)$ both strictly win and pay $\gamma$ each.  Treat
+them as two aliases of one bidder with true target $\{g\}$.  The cover
+inequality and the induction hypothesis imply
+\[
+  t
+  \le c_{\{H_h\}\cup L'}(\{g\})
+  \le 2\gamma
+  \le 2\lambda
+  <t,
+\]
+a contradiction.  Hence a high singleton has no low co-winner.
+
+Now choose
+\[
+  y>\max\{\lambda,c_{\{H_h\}\cup L}(\{g\})\}.
+\]
+The high singleton wins, and the statement just proved makes every report in
+$L$ lose.  Regard the principal and the reports in $L$ as one false-name
+family against $H_h$.  Only the principal pays, so
+Lemma~\ref{lem:det-cover} gives
+\[
+  t=c_{\{H_h\}}(\{g\})
+  \le c_{\{H_h\}\cup L}(\{g\}).
+\]
+This proves the price bound and completes the induction.
+\end{proof}
+
+\begin{theorem}[Deterministic upper bound without IIG]
+\label{thm:no-iig-upper}
+Every mechanism in the deterministic class above satisfies
+\[
+  \rho(\mathcal M)\le\frac{2}{m+1}.
+\]
+The bound already holds on single-minded star profiles.
+\end{theorem}
+
+\begin{proof}
+The claim is immediate if $\rho(\mathcal M)=0$, so assume the ratio is
+positive and $m\ge2$.  Fix $\eps>0$ and choose the near-flat pair $h<h'$ from
+Lemma~\ref{lem:no-iig-flat}.  Write
+\[
+  t=t(h),
+  \qquad
+  t'=t(h'),
+  \qquad
+  \bar t=\max\{t,t'\}.
+\]
+Then $\bar t\le(1+\eps)t$.  Choose $a>\bar t$ and define the clean reverse
+price
+\[
+  \eta(a)=c_{\{(\{1\},a)\}}(M).
+\]
+Because $a>t'$, the singleton $(\{1\},a)$ strictly wins against $H_{h'}$.
+The grand-bundle report of value $h'$ therefore loses, so
+\begin{equation}
+  \eta(a)\ge h'>h.
+  \label{eq:reverse-slack}
+\end{equation}
+
+Singleton auxiliaries cannot lower this grand-bundle price.  Indeed, for any
+family $L$ of singleton reports, choose a grand-bundle bid above the finite
+threshold $c_{\{(\{1\},a)\}\cup L}(M)$.  The grand report wins and every
+singleton in $L$ loses.  Applying Lemma~\ref{lem:det-cover} to this principal
+and the losing auxiliaries, against external report $(\{1\},a)$, gives
+\begin{equation}
+  c_{\{(\{1\},a)\}\cup L}(M)\ge\eta(a).
+  \label{eq:dirty-grand-price}
+\end{equation}
+
+Fix $0<\lambda<t/2$ and let
+\[
+  L=\{(\{g\},\lambda):g=2,\ldots,m\}.
+\]
+Consider the star profile
+\begin{equation}
+  \theta^\star=\{H_h,(\{1\},a)\}\cup L.
+  \label{eq:no-iig-star}
+\end{equation}
+By \eqref{eq:reverse-slack} and \eqref{eq:dirty-grand-price}, the grand bidder
+faces a price strictly above $h$ and loses.
+
+We next show that the high singleton must win.  Suppose instead that it loses
+and that a low singleton $(\{g\},\lambda)$ wins.  Let
+$L'=L\setminus\{(\{g\},\lambda)\}$.  Half-price persistence gives
+\[
+  c_{\{H_h\}\cup L'}(\{g\})\ge t.
+\]
+Against the external profile $\{H_h\}\cup L'$, let one physical bidder submit
+the two reports $(\{g\},\lambda)$ and $(\{1\},a)$.  At $\theta^\star$, the
+first wins and the second loses.  The false-name family covers $\{g\}$ and
+pays at most $\lambda<t$,
+contradicting Lemma~\ref{lem:det-cover}.  Thus no low singleton can win when
+the high singleton loses.  Since the grand bidder already loses, this would
+leave zero welfare on a positive-value profile, contradicting the assumed
+positive ratio.  Hence $(\{1\},a)$ wins.
+
+Finally, Lemma~\ref{lem:no-iig-half} implies that none of the low singletons
+co-wins with $(\{1\},a)$.  Therefore
+\[
+  \SW_{\mathcal M}(\theta^\star)=a,
+  \qquad
+  \OPT(\theta^\star)\ge a+(m-1)\lambda,
+\]
+and
+\[
+  \rho(\mathcal M)
+  \le\frac{a}{a+(m-1)\lambda}.
+\]
+Let $a\downarrow\bar t$ and $\lambda\uparrow t/2$.  Since
+$\bar t\le(1+\eps)t$,
+\[
+  \rho(\mathcal M)
+  \le
+  \frac{2(1+\eps)}{2(1+\eps)+m-1}.
+\]
+Letting $\eps\downarrow0$ gives $2/(m+1)$.  For $m=1$, the statement reduces
+to the trivial bound $\rho\le1$.
+\end{proof}
+
+The bound is tight: the Adaptive Reserve Price mechanism of
+\cite{iwasaki2010worst} attains $2/(m+1)$.
+
+\section{A randomized mechanism}
+\label{sec:randomized}
+
+Randomization removes the linear barrier of
+Section~\ref{sec:deterministic}. Our mechanism is assembled from
+three ingredients, the first two of which we state in more
+generality than we need.
+
+\begin{itemize}
+\item \emph{Thinning} (Section~\ref{sec:rand-thinning}). Deleting
+goods at random, independently of the reports, and scoring every
+report by its expected surviving value turns any mechanism into
+another mechanism with the same incentive properties
+(Theorem~\ref{thm:thinning}). Thinning is therefore a free tool
+for reshaping the order in which a mechanism ranks reports.
+\item \emph{Reserve-greedy mechanisms}
+(Section~\ref{sec:rand-reserve}). We run the greedy algorithm of
+\citet{lehmann2002truth} and impose on its winners a common
+reserve, a random fraction of the largest rejected bid.
+Theorem~\ref{thm:reserve} characterizes the reserve laws for
+which the resulting mechanism is false-name-proof in expectation;
+the uniform law is the extremal one.
+\item \emph{Scales} (Section~\ref{sec:rand-mechanism}). The final
+mechanism mixes thinned reserve-greedy mechanisms over
+logarithmically many deletion rates. Only the welfare guarantee
+(Section~\ref{sec:rand-welfare}) depends on this mixture.
+\end{itemize}
+
+\subsection{Thinning}
+\label{sec:rand-thinning}
+
+Following the terminology of \citet{lehmann2002truth}, call a
+mechanism \emph{exact} if every bidder receives either its
+reported target or nothing; we also require that bidders who
+receive nothing pay zero. A bidder is \emph{served} when it
+receives its reported target.
+
+\begin{definition}[Thinning]
+\label{def:thinning}
+Let \(\mathcal M\) be an exact mechanism, and let
+\(\widetilde M\subseteq M\) be a random set of \emph{surviving}
+goods, drawn independently of the reports and of the randomness
+of \(\mathcal M\), with \emph{survival function}
+\[
+q(R)=\Pr[R\subseteq\widetilde M]>0
+\qquad(R\subseteq M).
+\]
+For a report profile \(\hat\theta\) with reports \((S_i,b_i)\),
+let \(q\hat\theta\) denote the \emph{scored profile}, with
+reports \((S_i,q(S_i)b_i)\). The \emph{thinning} of
+\(\mathcal M\) by \(\widetilde M\) runs \(\mathcal M\) on
+\(q\hat\theta\). Bidder \(i\) receives \(S_i\) precisely when it
+is served by \(\mathcal M\) and \(S_i\subseteq\widetilde M\); it
+then pays \(P_i/q(S_i)\), where \(P_i\) is its payment in
+\(\mathcal M\). Every other bidder receives nothing and pays
+zero.
+\end{definition}
+
+A thinned mechanism ranks a report by the value it is expected
+to realize, so that large targets are discounted. The discount is
+real: the goods are actually withheld. This is what makes it
+compatible with false names.
+
+\begin{theorem}[Thinning preserves incentives]
+\label{thm:thinning}
+Let \(\mathcal M\) be an exact mechanism that makes no positive
+transfers. Its thinning by \(\widetilde M\) is exact and makes
+no positive transfers. Moreover:
+\begin{enumerate}
+\item[(a)] if \(\mathcal M\) is ex-post feasible, respectively
+ex-post individually rational, then so is the thinning;
+\item[(b)] if \(\mathcal M\) is truthful, respectively
+false-name-proof in expectation, then so is the thinning;
+\item[(c)] if \(\mathcal M\) is universally truthful and ex-post
+individually rational, then the thinning is universally
+truthful;
+\item[(d)] for every type profile \(\theta\), the expected
+welfare of the thinning at \(\theta\) equals
+\(\E[\SW_{\mathcal M}(q\theta)]\), the expected welfare of
+\(\mathcal M\) at the scored profile.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+The thinning serves a subset of the bidders served by
+\(\mathcal M\) and rescales their payments by positive factors.
+It is therefore exact, makes no positive transfers, and is
+ex-post feasible whenever \(\mathcal M\) is.
+
+Fix a bidder of type \((S,v)\) and an external profile \(E\),
+and put \(z=q(S)v\). We compare this bidder, in the thinning and
+facing \(E\), with a \emph{fictitious} bidder of type \((S,z)\)
+in \(\mathcal M\), facing \(qE\).
+
+\emph{Truthful reports.} If the bidder reports truthfully,
+\(\mathcal M\) is run on the fictitious truthful report against
+\(qE\). Let \(P\) be the resulting payment in \(\mathcal M\),
+which is zero unless the report is served. The realized utility
+in the thinning is
+\begin{equation}\label{eq:thin-truthful}
+\mathbf{1}\{S\subseteq\widetilde M\}
+\left(v\,\mathbf{1}\{\text{served}\}-\frac{P}{q(S)}\right)
+=\frac{\mathbf{1}\{S\subseteq\widetilde M\}}{q(S)}
+\bigl(z\,\mathbf{1}\{\text{served}\}-P\bigr),
+\end{equation}
+that is, \(\mathbf{1}\{S\subseteq\widetilde M\}/q(S)\) times the
+realized truthful utility of the fictitious bidder. This proves
+the second half of~(a). Since \(\widetilde M\) is independent of
+\(\mathcal M\), taking expectations shows that the two bidders
+have the same truthful expected utility, and that the bidder is
+served in the thinning with probability \(q(S)\) times the
+service probability of the fictitious bidder. Summing
+\(v_i\) times this probability over the bidders of a profile
+gives~(d).
+
+\emph{False names.} Let the bidder submit aliases \((S_j,b_j)\),
+\(j\in A\), so that \(\mathcal M\) is run on the scored aliases
+\((S_j,q(S_j)b_j)\) against \(qE\), and let \(D\subseteq A\) be
+the random set of aliases served by \(\mathcal M\). No deleted
+good is ever allocated. The bidder therefore obtains \(S\) in the
+thinning only if \(S\subseteq\bigcup_{j\in D}S_j\) and
+\(S\subseteq\widetilde M\), and by independence its expected
+value is at most
+\[
+v\,q(S)\Pr\Bigl[S\subseteq\bigcup_{j\in D}S_j\Bigr]
+=z\Pr\Bigl[S\subseteq\bigcup_{j\in D}S_j\Bigr],
+\]
+which is the expected value that the fictitious bidder derives
+from the scored aliases in \(\mathcal M\). Alias \(j\) pays
+\(P_j/q(S_j)\) when \(j\in D\) and \(S_j\subseteq\widetilde M\),
+so its expected payment in the thinning is
+\(\E[P_j\mathbf{1}\{j\in D\}]=\pi_j\), its expected payment in
+\(\mathcal M\). The deviation's expected utility in the thinning
+is thus at most the expected utility that the fictitious bidder
+derives from the scored aliases. If \(\mathcal M\) is
+false-name-proof in expectation, this is at most the fictitious
+truthful expected utility, which equals the truthful expected
+utility in the thinning. The case \(|A|=1\) is truthfulness.
+This proves~(b).
+
+\emph{Universal truthfulness.} Fix a realization of the
+randomness of \(\mathcal M\) and of \(\widetilde M\), and let the
+bidder report \((R,b)\). If this report is not served in the
+thinning, or if \(S\not\subseteq R\), the realized utility is at
+most zero, hence at most the truthful one by~(a). Otherwise
+\(S\subseteq R\subseteq\widetilde M\), the report
+\((R,q(R)b)\) is served by \(\mathcal M\) at some payment
+\(P\ge0\), and since \(q(R)\le q(S)\) the realized utility is
+\[
+v-\frac{P}{q(R)}\le v-\frac{P}{q(S)}=\frac{z-P}{q(S)}.
+\]
+Here \(z-P\) is the realized utility in \(\mathcal M\) of the
+fictitious bidder when it reports \((R,q(R)b)\). By universal
+truthfulness of \(\mathcal M\), it is at most the fictitious
+truthful realized utility, and~\eqref{eq:thin-truthful}
+gives~(c), because \(S\) survives.
+\end{proof}
+
+\subsection{Reserve-greedy mechanisms}
+\label{sec:rand-reserve}
+
+\paragraph{Greedy notation.}
+A \emph{weighted report} \((S_i,w_i)\) consists of a target and a
+weight \(w_i>0\). For an indexed collection \(T\) of weighted
+reports, let \(G(T)\) be the packing obtained by processing
+reports in nonincreasing order of weight and accepting a report
+whenever its target is disjoint from the previously accepted
+targets. Ties are resolved by a priority order \(\omega\) on the
+identities, independent of the reported values and targets, and
+every subprofile inherits the induced order. Define
+\[
+C(T)=\max_{i\in T\setminus G(T)}w_i,
+\]
+the largest rejected weight, where the maximum of an empty set is
+zero. For a weighted profile \(E\) and a nonempty bundle
+\(R\subseteq M\), define
+\[
+\kappa(R;E)=
+\max\bigl\{
+w_j:j\in G(E),\
+S_j\cap R\ne\varnothing
+\bigr\},
+\qquad
+B(R;E)=\max\{C(E),\kappa(R;E)\},
+\]
+again using zero for an empty maximum. The \emph{greedy critical
+weight} of \(i\in G(T)\) is
+\(\kappa_i(T)=\kappa(S_i;T\setminus\{i\})\).
+
+\begin{definition}[Reserve-greedy mechanism \(\mathcal A^{\mu}\)]
+\label{def:reserve-greedy}
+Let \(\mu\) be a probability law on \([0,1]\), the
+\emph{reserve law}. Reports with value zero are discarded. Given
+the remaining reports \((S_i,b_i)\), proceed as follows.
+\begin{enumerate}
+\item \emph{Greedy.} Let \(T\) be the weighted profile with
+weights \(w_i=b_i\). Draw a uniformly random priority order
+\(\omega\) on the participating identities, independently of the
+reports, and compute
+\[
+G=G(T),\qquad
+C=C(T),\qquad
+\kappa_i=\kappa_i(T)\quad(i\in G).
+\]
+\item \emph{Reserve.} Draw \(\xi\sim\mu\).
+\item \emph{Allocation and payments.} Bidder \(i\) receives
+\(S_i\) precisely when \(i\in G\) and \(w_i\ge\xi C\), and then
+pays
+\begin{equation}\label{eq:base-payment}
+P_i=\max\{\kappa_i,\xi C\}.
+\end{equation}
+Every other bidder receives nothing and pays zero.
+\end{enumerate}
+\end{definition}
+
+If \(\xi\) is identically zero, \(\mathcal A^{\mu}\) is the
+greedy mechanism with critical payments of
+\citet{lehmann2002truth}, ranked by value. That mechanism is
+truthful but not false-name-proof: two aliases can shield each
+other from a common competitor, which reduces both critical
+weights to zero. The reserve \(\xi C\) charges for this
+shielding. It is computed from rejected reports, which a bidder
+can create under false names but can never remove.
+
+\begin{theorem}[Admissible reserve laws]
+\label{thm:reserve}
+For every reserve law \(\mu\), the mechanism \(\mathcal A^{\mu}\)
+is exact, ex-post feasible, universally truthful, ex-post
+individually rational, and makes no positive transfers.
+Furthermore, let \(\xi\sim\mu\) and consider the condition
+\begin{equation}\label{eq:R}
+\tag{R}
+\E\bigl[\xi\,\mathbf{1}\{\xi\le\beta\}\bigr]
+\ge\frac{\beta}{2}\Pr[\xi\le\beta]
+\qquad\text{for every }\beta\in[0,1].
+\end{equation}
+\begin{enumerate}
+\item[(a)] If \(\mu\) satisfies~\eqref{eq:R}, then
+\(\mathcal A^{\mu}\) is false-name-proof in expectation.
+\item[(b)] Conversely, if \(m\ge3\) and \(\mathcal A^{\mu}\) is
+false-name-proof in expectation, then \(\mu\)
+satisfies~\eqref{eq:R}.
+\end{enumerate}
+\end{theorem}
+
+Condition~\eqref{eq:R} requires that, conditional on lying below
+any level \(\beta\), the reserve fraction is on average at least
+\(\beta/2\): two aliases that shield each other at level
+\(\beta\) must together pay what a single bidder would. The proof
+is given in Section~\ref{sec:rand-reserve-proof}. Three examples
+illustrate the condition.
+
+\begin{itemize}
+\item The uniform law on \([0,1]\) satisfies~\eqref{eq:R} with
+equality at every level, and it is the only law that does.
+Indeed, after integration by parts, equality at every \(\beta\)
+reads
+\(\beta\Pr[\xi\le\beta]=2\int_0^\beta\Pr[\xi\le\zeta]\,d\zeta\),
+whose only solution with \(\Pr[\xi\le1]=1\) is
+\(\Pr[\xi\le\beta]=\beta\). More generally, \eqref{eq:R} is
+equivalent to
+\(\beta\Pr[\xi\le\beta]\ge2\int_0^\beta\Pr[\xi\le\zeta]\,d\zeta\),
+which makes \(\beta^{-2}\int_0^\beta\Pr[\xi\le\zeta]\,d\zeta\)
+nondecreasing in \(\beta\). Every admissible law therefore
+satisfies \(\int_0^\beta\Pr[\xi\le\zeta]\,d\zeta\le\beta^2/2\),
+with equality for the uniform law: averaged over levels, no
+admissible reserve serves low bids more often.
+\item The law concentrated at zero violates~\eqref{eq:R}, in
+accordance with the shielding attack described above.
+\item A point mass at \(\beta_0\ge1/2\) satisfies~\eqref{eq:R}.
+With a fixed priority order it gives a deterministic
+false-name-proof mechanism, in which greedy winners below the
+reserve \(\beta_0C\) are excluded. Its welfare is poor, as
+Section~\ref{sec:deterministic} leads one to expect: two unit
+bids on one good exclude bids just below \(1/2\) on each of the
+other \(m-1\) goods, so its approximation ratio is at least
+\((m+1)/2\).
+\end{itemize}
+Randomizing the reserve is thus what allows winners with low
+bids to be served at all, and~\eqref{eq:R} determines how often.
+
+\subsection{The mechanism and the main result}
+\label{sec:rand-mechanism}
+
+Let
+\[
+\mathcal K=\bigl\{1,2,4,\ldots,2^{\lfloor\log_2m\rfloor}\bigr\},
+\qquad
+|\mathcal K|=1+\lfloor\log_2m\rfloor.
+\]
+A \emph{scale} is an element \(k\in\mathcal K\cup\{\infty\}\). At
+scale \(k\), every good survives independently with probability
+\[
+p_k=1-\frac{1}{2k},
+\qquad
+p_\infty=1,
+\]
+so that a bundle \(R\) survives with probability
+\(q_k(R)=p_k^{|R|}\).
+
+\begin{definition}[The mechanisms \(\mathcal A_k\) and
+\(\mathcal A_{\mathcal K}\)]
+\label{def:M}
+Let \(\mathcal A_\infty\) be the reserve-greedy mechanism whose
+reserve law is uniform on \([0,1]\). For \(k\in\mathcal K\), let
+\(\mathcal A_k\) be the thinning of \(\mathcal A_\infty\) by a
+random set \(\widetilde M\) that retains each good independently
+with probability \(p_k\). The mechanism
+\(\mathcal A_{\mathcal K}\) runs \(\mathcal A_\infty\) with
+probability \(1/2\); with probability \(1/2\), it chooses a
+scale \(k\) uniformly from \(\mathcal K\) and runs
+\(\mathcal A_k\).
+\end{definition}
+
+Unfolding the definitions, \(\mathcal A_k\) gives report \(i\)
+the weight \(w_i=q_k(S_i)b_i\), runs greedy on the resulting
+weighted profile \(T\), and draws
+\(\xi\sim\operatorname{Unif}[0,1]\) and \(\widetilde M\). Bidder
+\(i\) receives \(S_i\) precisely when
+\[
+i\in G,\qquad w_i\ge\xi C,\qquad S_i\subseteq\widetilde M,
+\]
+and then pays
+\begin{equation}\label{eq:actual-payment}
+P_i=\frac{\max\{\kappa_i,\xi C\}}{q_k(S_i)}.
+\end{equation}
+
+\begin{theorem}\label{thm:main}
+For every \(m\ge1\), the mechanism \(\mathcal A_{\mathcal K}\)
+for single-minded bidders is universally truthful,
+false-name-proof in expectation, ex-post individually rational,
+and makes no positive transfers. For every type profile
+\(\theta\),
+\[
+\E[\SW_{\mathcal A_{\mathcal K}}(\theta)]
+\ge
+\frac{\OPT(\theta)}{
+4\sqrt{2m\ln(em)\bigl(1+\lfloor\log_2m\rfloor\bigr)}+8/e}.
+\]
+In particular, its worst-case welfare approximation ratio
+\(1/\rho(\mathcal A_{\mathcal K})\) is
+\[
+O(\sqrt m\log(m+1))=\widetilde O(\sqrt m).
+\]
+
+The mechanism is anonymous in utilities and symmetric across
+goods, and it uses polynomially many arithmetic operations. No
+independence-of-irrelevant-goods condition is imposed.
+\end{theorem}
+
+The incentive properties follow at once from the two general
+theorems.
+
+\begin{corollary}\label{cor:mixture}
+Every mechanism that draws a scale
+\(k\in\mathcal K\cup\{\infty\}\) from a fixed distribution,
+independently of the reports, and then runs \(\mathcal A_k\) is
+ex-post feasible, universally truthful, ex-post individually
+rational, false-name-proof in expectation, and makes no positive
+transfers. In particular, this holds for
+\(\mathcal A_{\mathcal K}\).
+\end{corollary}
+
+\begin{proof}
+The uniform law satisfies~\eqref{eq:R}, so \(\mathcal A_\infty\)
+has all five properties by Theorem~\ref{thm:reserve}. Each
+\(\mathcal A_k\) inherits them by Theorem~\ref{thm:thinning}.
+The ex-post properties then hold for every realization of the
+scale. Because the scale is drawn independently of the reports,
+the expected utility of any family of reports is the average
+over the scale of its expected utility in \(\mathcal A_k\), and
+the false-name inequality is preserved by this average.
+\end{proof}
+
+The welfare bound is Proposition~\ref{prop:welfare}, and the
+remaining claims of Theorem~\ref{thm:main} are
+Proposition~\ref{prop:implementation}.
+
+\subsection{Proof of Theorem~\ref{thm:reserve}}
+\label{sec:rand-reserve-proof}
+
+\begin{lemma}[Greedy normalizer]
+\label{lem:greedy}
+Let \(T\) and \(E\) be weighted profiles.
+\begin{enumerate}
+\item[(a)] We have
+\begin{equation}\label{eq:pair}
+C(T)=
+\max_{\substack{i,j\in T,\ i\ne j\\
+                 S_i\cap S_j\ne\varnothing}}
+\min\{w_i,w_j\}.
+\end{equation}
+In particular, \(C(T)\) does not depend on the priority order and
+cannot decrease when reports are added.
+\item[(b)] Add to \(E\) a report \((R,w)\) under a new identity.
+It is accepted by greedy if \(w>\kappa(R;E)\) and rejected if
+\(w<\kappa(R;E)\). Whenever it is accepted,
+\begin{equation}\label{eq:normalizer}
+C\bigl(E\cup\{(R,w)\}\bigr)=B(R;E).
+\end{equation}
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(a) At least one member of every conflicting pair is rejected,
+and the rejected member has weight at most \(C(T)\); hence the
+minimum weight of the pair is at most \(C(T)\). Conversely, every
+rejected report is blocked by an accepted report of at least its
+weight, and the minimum weight of this pair is the rejected
+weight. This gives the reverse inequality.
+
+(b) Reports processed before \((R,w)\) are treated exactly as in
+the greedy run on \(E\). The new report is therefore accepted
+precisely when no report of \(G(E)\) processed before it has a
+target intersecting \(R\). If \(w>\kappa(R;E)\), every such
+report has smaller weight and is processed later. If
+\(w<\kappa(R;E)\), a report of \(G(E)\) of weight
+\(\kappa(R;E)\) whose target intersects \(R\) is processed
+earlier.
+
+Suppose now that the new report is accepted, so that
+\(w\ge\kappa(R;E)\). A report of \(E\) that conflicts with it is
+either accepted in \(G(E)\), and therefore has weight at most
+\(\kappa(R;E)\), or rejected there, and therefore has weight at
+most \(C(E)\). Conflicting pairs inside \(E\) have minimum weight
+at most \(C(E)\). Equation~\eqref{eq:pair} gives the upper bound
+\(C(E\cup\{(R,w)\})\le B(R;E)\). The lower bound follows from
+monotonicity and, when \(\kappa(R;E)>0\), from the conflicting
+report of \(G(E)\) of weight \(\kappa(R;E)\le w\).
+\end{proof}
+
+\begin{lemma}[Realized critical prices]
+\label{lem:threshold}
+Consider \(\mathcal A^{\mu}\). Fix a realization of
+\((\omega,\xi)\) and an external profile \(E\). For a nonempty
+bundle \(R\subseteq M\), let
+\[
+c_E(R)=\max\{\kappa(R;E),\,\xi B(R;E)\}.
+\]
+A bidder reporting \((R,b)\) against \(E\) is served and pays
+\(c_E(R)\) if \(b>c_E(R)\), and is not served if \(b<c_E(R)\).
+If \(b=c_E(R)\), it is either served at payment \(b\) or not
+served. Moreover, \(c_E(R)\le c_E(R')\) whenever
+\(R\subseteq R'\).
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:greedy}(b), the report is accepted if
+\(b>\kappa(R;E)\) and rejected if \(b<\kappa(R;E)\); whenever it
+is accepted, its greedy critical weight is \(\kappa(R;E)\) and
+the normalizer of the full profile is \(B(R;E)\). An accepted
+report is thus served precisely when \(b\ge\xi B(R;E)\), and it
+then pays \(c_E(R)\) by~\eqref{eq:base-payment}. Consequently,
+the report is served if \(b>c_E(R)\), it is not served if
+\(b<c_E(R)\), and at equality it pays \(c_E(R)=b\) if it is
+served. Monotonicity holds because \(\kappa(R;E)\), and hence
+\(B(R;E)\), can only increase when \(R\) is enlarged.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:reserve}, ex-post
+properties]
+The mechanism is exact by construction, its served bidders form
+a subset of a greedy packing, and payments are nonnegative. By
+Lemma~\ref{lem:threshold}, every realization of
+\(\mathcal A^{\mu}\) is a deterministic mechanism in which a
+report wins when its value exceeds a critical price that does
+not depend on that value and is nondecreasing in the reported
+target, and in which winners pay the critical price. Such
+mechanisms are truthful and individually rational for
+single-minded bidders
+\citep{lehmann2002truth,mualem2008truthful}; in the terminology
+of \citet{yokoo2003characterization}, they are price-oriented,
+rationing-free protocols. For completeness: the truthful
+realized utility of a bidder of type \((S,v)\) is
+\(\max\{0,v-c_E(S)\}\ge0\); a report \((R,b)\) that is served
+with \(S\subseteq R\) yields \(v-c_E(R)\le v-c_E(S)\); and every
+other report yields at most zero.
+\end{proof}
+
+The next lemma is the combinatorial core of the false-name
+argument. It concerns greedy packing only, and expresses that a
+competitor displaced by false names leaves a trace.
+
+\begin{lemma}[Displacement]
+\label{lem:displacement}
+Let \(E\) be a weighted profile, let \(S\subseteq M\) be a
+nonempty bundle, and put \(\kappa=\kappa(S;E)\) and
+\(B=B(S;E)\). Let \(T'\) be obtained from \(E\) by adding
+finitely many weighted reports under new identities \(A\), with
+a priority order extending that of \(E\). Let \(F\subseteq A\)
+be the set of new reports accepted by \(G(T')\), and suppose
+that the targets of \(F\) cover \(S\). Then
+\begin{equation}\label{eq:C-comparison}
+C(T')\ge B.
+\end{equation}
+Moreover, if \(\kappa>0\), then one of the following holds:
+\begin{enumerate}
+\item[(a)] at least two reports of \(F\) have weight at least
+\(\kappa\);
+\item[(b)] exactly one report \(j\in F\) has weight at least
+\(\kappa\), and \(\kappa_j(T')\ge\kappa\).
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:greedy}(a), \(C(T')\ge C(E)\). If \(\kappa>0\),
+fix a report of \(G(E)\) of weight \(\kappa\) whose target
+intersects \(S\), and call it the \emph{blocker}. The blocker
+cannot be accepted in \(G(T')\), because the targets of \(F\)
+cover \(S\) and a greedy packing is disjoint. It is therefore
+rejected in \(T'\), implying \(C(T')\ge\kappa\). This
+proves~\eqref{eq:C-comparison}.
+
+Suppose now that \(\kappa>0\) and that~(a) fails. Since \(F\) is
+nonempty, there is \(j\in F\) such that every report of \(F\)
+other than \(j\) has weight below \(\kappa\). We show that
+\(\kappa_j(T')\ge\kappa\). Because \(j\) is accepted,
+Lemma~\ref{lem:greedy}(b) then gives
+\(w_j\ge\kappa_j(T')\ge\kappa\), which is~(b).
+
+Suppose, to the contrary, that \(\kappa_j(T')<\kappa\): in the
+profile \(T'\setminus\{j\}\), no accepted report of weight at
+least \(\kappa\) has a target intersecting \(S_j\). Call the
+reports of weight at least \(\kappa\) the \emph{prefix}; greedy
+processes them first. We claim that \(G(T')\) and
+\(G(T'\setminus\{j\})\) accept the same prefix reports other
+than \(j\). This is automatic if \(w_j<\kappa\). Otherwise, scan
+the prefix in greedy order. The two runs coincide before \(j\),
+and \(j\) is accepted in \(G(T')\). A later prefix report
+accepted in \(G(T'\setminus\{j\})\) has a target disjoint from
+\(S_j\) by assumption, so the presence of \(j\) never changes a
+decision.
+
+By the claim, a new report in the prefix that is accepted in
+\(G(T'\setminus\{j\})\) belongs to \(F\setminus\{j\}\) and has
+weight at least \(\kappa\); no such report exists. Hence all new
+reports in the prefix are rejected in \(G(T'\setminus\{j\})\).
+Deleting rejected reports never changes a greedy outcome, so the
+prefix reports accepted in \(G(T'\setminus\{j\})\) are exactly
+the prefix reports of \(G(E)\). In particular, the blocker is
+accepted in \(G(T'\setminus\{j\})\) and, by the claim, in
+\(G(T')\). This contradicts the first paragraph of the proof.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:reserve}(a)]
+Fix a bidder of type \((S,v)\), the external profile \(E\), and
+the priority order among the external identities. Put
+\(\kappa=\kappa(S;E)\) and \(B=B(S;E)\). By
+Lemma~\ref{lem:threshold}, the truthful realized utility is
+\(\max\{0,v-\max\{\kappa,\xi B\}\}\), whatever the bidder's own
+priority.
+
+Replace the truthful report by any finite family
+\(\hat\theta_A\) of alias reports \((S_j,w_j)\), with arbitrary
+targets, values, and priorities. Let \(T'\) be the resulting
+profile, let \(F\subseteq A\) be the set of aliases accepted by
+\(G(T')\), and write \(C'=C(T')\). Abstention gives zero utility.
+If the targets of \(F\) do not cover \(S\), the deviation
+produces no value and has nonnegative payments. In both cases it
+cannot improve upon truthful utility. Suppose henceforth that
+the targets of \(F\) cover \(S\), and define
+\[
+F_S=\{j\in F:S_j\cap S\ne\varnothing\},
+\qquad
+\alpha=\min_{j\in F_S}\min\{w_j,C'\},
+\]
+with the minimum attained by \(j_0\in F_S\).
+
+Fix \(\xi\). Since \(\xi\le1\), an alias \(j\in F\) is served
+precisely when \(\xi C'\le\min\{w_j,C'\}\), and it then pays
+\(\max\{\kappa_j(T'),\xi C'\}\); the other aliases pay nothing.
+Every alias in \(F_S\) is necessary to supply \(S\), because the
+accepted targets are disjoint, so the bidder obtains \(S\) only
+if \(\xi C'\le\alpha\). Its realized utility is therefore at
+most
+\begin{equation}\label{eq:attack}
+v\,\mathbf{1}\{\xi C'\le\alpha\}
+-\sum_{j\in F}
+\mathbf{1}\{\xi C'\le\min\{w_j,C'\}\}
+\max\{\kappa_j(T'),\xi C'\}.
+\end{equation}
+We claim the following \emph{cover inequality in expectation}:
+\begin{equation}\label{eq:cover}
+\E_\xi\Bigl[\,
+\sum_{j\in F}
+\mathbf{1}\{\xi C'\le\min\{w_j,C'\}\}
+\max\{\kappa_j(T'),\xi C'\}
+\Bigr]
+\ge
+\E_\xi\bigl[
+\mathbf{1}\{\xi C'\le\alpha\}\max\{\kappa,\xi C'\}
+\bigr].
+\end{equation}
+It is the randomized counterpart of
+Lemma~\ref{lem:det-cover}: the aliases together pay, on average,
+at least what a single report served on the same event would pay
+against the competitor of weight \(\kappa\).
+Granting~\eqref{eq:cover}, and using \(C'\ge B\)
+from~\eqref{eq:C-comparison},
+\[
+\E[u_{\mathrm{aliases}}]
+\le
+\E_\xi\bigl[
+\mathbf{1}\{\xi C'\le\alpha\}
+\bigl(v-\max\{\kappa,\xi C'\}\bigr)
+\bigr]
+\le
+\E_\xi\bigl[\max\{0,v-\max\{\kappa,\xi B\}\}\bigr]
+=
+\E[u_{\mathrm{truthful}}].
+\]
+The argument is conditional on the external priorities and
+permits arbitrary priorities for the aliases. It therefore
+remains valid after averaging over the uniformly random priority
+order.
+
+It remains to prove~\eqref{eq:cover}. We compare the payments of
+suitable aliases with the right-hand integrand, in three cases.
+
+\emph{Case 1: \(\kappa=0\).} For every \(\xi\), the payment of
+\(j_0\) is at least
+\(\mathbf{1}\{\xi C'\le\alpha\}\,\xi C'\), which is the
+right-hand integrand.
+
+\emph{Case 2: \(\kappa>0\) and
+Lemma~\ref{lem:displacement}(b) holds.} Let \(j\) be the unique
+alias of \(F\) of weight at least \(\kappa\), so that
+\(\kappa_j(T')\ge\kappa\). Then \(\min\{w_j,C'\}\ge\alpha\): this
+is an equality if \(j=j_0\), and otherwise
+\(\alpha\le w_{j_0}<\kappa\le\min\{w_j,C'\}\). Hence, for every
+\(\xi\), the payment of \(j\) is at least
+\(\mathbf{1}\{\xi C'\le\alpha\}\max\{\kappa,\xi C'\}\).
+
+\emph{Case 3: \(\kappa>0\) and
+Lemma~\ref{lem:displacement}(a) holds.} Call the aliases of
+\(F\) of weight at least \(\kappa\) \emph{heavy}; there are at
+least two. Put \(\beta=\kappa/C'\in(0,1]\). A heavy alias is
+served whenever \(\xi\le\beta\), and then pays at least
+\(\xi C'\). If \(\alpha\ge\kappa\), let \(j\ne j_0\) be heavy.
+The payments of \(j_0\) and \(j\) total at least
+\[
+\mathbf{1}\{\xi C'\le\alpha\}\,\xi C'
++\mathbf{1}\{\xi\le\beta\}\,\xi C',
+\]
+whereas
+\[
+\mathbf{1}\{\xi C'\le\alpha\}\max\{\kappa,\xi C'\}
+=\mathbf{1}\{\xi\le\beta\}\,\kappa
++\mathbf{1}\{\kappa<\xi C'\le\alpha\}\,\xi C'.
+\]
+If \(\alpha<\kappa\), then \(j_0\) is not heavy, two heavy
+aliases pay at least
+\(2\cdot\mathbf{1}\{\xi\le\beta\}\,\xi C'\) in total, and
+\(\mathbf{1}\{\xi C'\le\alpha\}\max\{\kappa,\xi C'\}
+\le\mathbf{1}\{\xi\le\beta\}\,\kappa\). In both subcases, the
+total payment exceeds the right-hand integrand by at least
+\[
+\mathbf{1}\{\xi\le\beta\}\,(2\xi-\beta)\,C',
+\]
+whose expectation is nonnegative by~\eqref{eq:R}.
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:reserve}(b)]
+Suppose that~\eqref{eq:R} fails at some \(\beta\in(0,1]\).
+Consider the goods \(1,2,3\) and the external profile \(E\)
+consisting of two reports with target \(\{3\}\) and value \(1\),
+and one report with target \(\{1,2\}\) and value \(\beta\). Then
+\(C(E)=1\), \(\kappa(\{1,2\};E)=\beta\), and
+\(B(\{1,2\};E)=1\), so a bidder of type \((\{1,2\},\beta)\) has
+truthful realized utility
+\(\max\{0,\beta-\max\{\beta,\xi\}\}=0\).
+
+Let this bidder instead submit two aliases with targets
+\(\{1\}\) and \(\{2\}\) and common value \(\beta'>\beta\). Greedy
+accepts both aliases and rejects the report with target
+\(\{1,2\}\). The normalizer is still \(1\), and both aliases
+have greedy critical weight zero, each shielding the other. Both
+are therefore served when \(\xi\le\beta'\), and each then pays
+\(\xi\). The deviation's expected utility is
+\[
+\beta\Pr[\xi\le\beta']
+-2\,\E\bigl[\xi\,\mathbf{1}\{\xi\le\beta'\}\bigr].
+\]
+As \(\beta'\) decreases to \(\beta\), this converges to
+\(\beta\Pr[\xi\le\beta]-2\,\E[\xi\,\mathbf{1}\{\xi\le\beta\}]>0\).
+The deviation is thus profitable for \(\beta'\) close to
+\(\beta\), and \(\mathcal A^{\mu}\) is not false-name-proof in
+expectation.
+\end{proof}
+
+\subsection{Welfare of the mixture}
+\label{sec:rand-welfare}
+
+The welfare analysis combines the charging argument of
+\citet{lehmann2002truth} for greedy with a second-moment bound
+that accounts for the reserve.
+
+\begin{lemma}[Welfare of \(\mathcal A_\infty\)]
+\label{lem:welfare-base}
+Let \(\theta\) be a type profile and let \(V\ge\max_iv_i\). Run
+\(\mathcal A_\infty\) on \(\theta\) with a fixed priority order
+\(\omega\), let \(G\) and \(C\) be the resulting greedy packing
+and normalizer, and let \(\varphi\) be the expected welfare over
+\(\xi\).
+\begin{enumerate}
+\item[(a)] We have
+\(\varphi=\sum_{i\in G}v_i\min\{1,v_i/C\}\), with the minimum
+replaced by one if \(C=0\).
+\item[(b)] We have \(\varphi\ge\max_iv_i\) and
+\(\sum_{i\in G}v_i^2\le V\varphi\).
+\item[(c)] For every set \(I\subseteq N\) of bidders with
+pairwise disjoint targets and every \(\chi\ge1\),
+\[
+\sum_{i\in I}v_i
+\le
+\sqrt{\chi\,|I|\,V\varphi}
++|I|\max\{v_j:j\in G,\ |S_j|>\chi\},
+\]
+where the maximum of an empty set is zero.
+\end{enumerate}
+\end{lemma}
+
+\begin{proof}
+(a) Weights equal values, and \(i\in G\) is served when
+\(v_i\ge\xi C\), which has probability \(\min\{1,v_i/C\}\).
+
+(b) The report processed first by greedy has the largest value,
+is accepted, and has weight at least \(C\); it is served for
+every \(\xi\). Moreover, \(v_i\le V\) and \(C\le V\) give
+\(v_i^2\le Vv_i\min\{1,v_i/C\}\).
+
+(c) Assign each bidder of \(I\) to the first greedy winner that
+blocks it, or to itself if it is accepted, and let \(\nu_j\) be
+the number of bidders assigned to \(j\in G\). Greedy ordering
+and disjointness of the targets in \(I\) imply
+\[
+\sum_{i\in I}v_i\le\sum_{j\in G}\nu_jv_j,
+\qquad
+\nu_j\le|S_j|,
+\qquad
+\sum_{j\in G}\nu_j=|I|.
+\]
+For winners with \(|S_j|\le\chi\), we have
+\(\sum\nu_j^2\le\chi\,|I|\), and Cauchy--Schwarz with~(b) gives
+\[
+\sum_{\substack{j\in G\\|S_j|\le\chi}}\nu_jv_j
+\le\sqrt{\chi\,|I|\,V\varphi}.
+\]
+The remaining winners contribute at most \(|I|\) times their
+largest value.
+\end{proof}
+
+\begin{proposition}[Welfare guarantee]
+\label{prop:welfare}
+For every type profile \(\theta\),
+\[
+\E[\SW_{\mathcal A_{\mathcal K}}(\theta)]
+\ge
+\frac{\OPT(\theta)}{
+4\sqrt{2m\ln(em)\,|\mathcal K|}+8/e}.
+\]
+\end{proposition}
+
+\begin{proof}
+Put \(V=\max_iv_i\). If \(V=0\), the claim is immediate.
+
+For a scale \(k\in\mathcal K\cup\{\infty\}\), let \(\Phi_k\)
+denote the expected welfare of \(\mathcal A_k\) at \(\theta\). By
+Theorem~\ref{thm:thinning}(d), \(\Phi_k\) is the expected welfare
+of \(\mathcal A_\infty\) at the scored profile \(q_k\theta\),
+whose values \(w_i=q_k(S_i)v_i\) are at most \(V\). For a fixed
+priority order \(\omega\), let \(\varphi_{k,\omega}\) denote the
+expected welfare of \(\mathcal A_\infty\) at \(q_k\theta\) over
+\(\xi\), so that \(\Phi_k=\E_\omega[\varphi_{k,\omega}]\).
+
+\paragraph{The scale \(\infty\).}
+By Lemma~\ref{lem:welfare-base}(b),
+\begin{equation}\label{eq:top}
+\Phi_\infty\ge V.
+\end{equation}
+
+\paragraph{The scales in \(\mathcal K\).}
+Fix an optimal packing \(N^\star\subseteq N\), that is, a set of
+bidders with pairwise disjoint targets, positive values, and
+total value \(\OPT(\theta)\). For each \(k\in\mathcal K\), let
+\[
+N_k=\{i\in N^\star:k\le |S_i|<2k\},
+\]
+and define
+\[
+W_k=\sum_{i\in N_k}v_i,\qquad
+n_k=|N_k|,\qquad
+m_k=\sum_{i\in N_k}|S_i|.
+\]
+Every target has between \(1\) and \(m\) goods, so the classes
+\(N_k\) partition \(N^\star\). Disjointness gives
+\begin{equation}\label{eq:mass}
+k\,n_k\le m_k,\qquad
+\sum_{k\in\mathcal K}m_k\le m,\qquad
+\sum_{k\in\mathcal K}n_k\le m.
+\end{equation}
+For \(i\in N_k\), we have \(|S_i|<2k\), and
+\((1-1/(2k))^{2k}\) is nondecreasing in \(k\ge1\), so
+\[
+q_k(S_i)
+\ge
+\left(1-\frac{1}{2k}\right)^{2k}
+\ge\left(1-\frac12\right)^{2}
+=\frac14,
+\]
+and hence \(v_i\le4w_i\).
+
+Set \(d=\ln(em)\), and apply Lemma~\ref{lem:welfare-base}(c) to
+the profile \(q_k\theta\), with \(I=N_k\) and \(\chi=2kd\). A
+greedy winner \(j\) with \(|S_j|>2kd\) has
+\[
+w_j\le q_k(S_j)V
+\le e^{-|S_j|/(2k)}V
+<\frac{V}{em}.
+\]
+Therefore, using~\eqref{eq:mass},
+\[
+\frac{W_k}{4}
+\le\sum_{i\in N_k}w_i
+\le\sqrt{2kd\,n_kV\varphi_{k,\omega}}+\frac{Vn_k}{em}
+\le\sqrt{2d\,m_kV\varphi_{k,\omega}}+\frac{Vn_k}{em}.
+\]
+Averaging over \(\omega\) and using concavity of the square root
+gives
+\begin{equation}\label{eq:class}
+W_k
+\le
+4\sqrt{2d\,m_kV\Phi_k}
++
+\frac{4Vn_k}{em}.
+\end{equation}
+
+Sum~\eqref{eq:class} over \(k\in\mathcal K\) and apply
+Cauchy--Schwarz and~\eqref{eq:mass}:
+\begin{equation}\label{eq:opt}
+\begin{aligned}
+\OPT(\theta)
+&\le
+4\sqrt{2dV}\sum_{k\in\mathcal K}\sqrt{m_k\Phi_k}
++\frac{4V}{e}\\
+&\le
+4\sqrt{2mdV\sum_{k\in\mathcal K}\Phi_k}
++\frac{4V}{e}.
+\end{aligned}
+\end{equation}
+
+\paragraph{The mixture.}
+By Definition~\ref{def:M} and~\eqref{eq:top}, the expected
+welfare \(\Phi\) of \(\mathcal A_{\mathcal K}\) satisfies
+\[
+\Phi
+=\frac12\Phi_\infty
++\frac1{2|\mathcal K|}\sum_{k\in\mathcal K}\Phi_k
+\ge\frac12V
++\frac1{2|\mathcal K|}\sum_{k\in\mathcal K}\Phi_k.
+\]
+The arithmetic--geometric mean inequality yields
+\[
+V\sum_{k\in\mathcal K}\Phi_k\le|\mathcal K|\,\Phi^2,
+\qquad
+V\le2\Phi.
+\]
+Substituting into~\eqref{eq:opt} proves
+\[
+\OPT(\theta)
+\le
+\left(
+4\sqrt{2m\ln(em)\,|\mathcal K|}+\frac8e
+\right)\Phi,
+\]
+which is the claimed approximation guarantee.
+\end{proof}
+
+The proof isolates the role of each ingredient. The reserve
+costs a second moment, Lemma~\ref{lem:welfare-base}(b), and the
+charging argument then bounds the approximation ratio by the
+square root of \(\sum_j\nu_j^2\). Keeping this sum of order \(m\)
+requires that a winner be not much larger than the bidders it
+displaces, which is what thinning at the matching scale
+enforces.
+
+\subsection{Implementation and symmetry}
+\label{sec:rand-implementation}
+
+\begin{proposition}\label{prop:implementation}
+The mechanism \(\mathcal A_{\mathcal K}\) is anonymous in
+utilities and symmetric across goods. For \(n\) submitted
+reports, it uses \(O(n^2\log n+n^2m)\) arithmetic operations.
+\end{proposition}
+
+\begin{proof}
+The priority order is uniformly random on the participating
+identities and independent of their reports, so relabelling
+bidders does not change the distribution of outcomes. All other
+operations depend on goods only through cardinalities,
+intersections, and independent identical survival
+probabilities. The mechanism is therefore anonymous in utilities
+and symmetric across goods.
+
+Only one scale is executed. One greedy run takes
+\(O(n\log n+nm)\) elementary operations with explicit set
+representations, and computing all needed critical weights by
+deletion runs takes \(O(n^2\log n+n^2m)\) operations.
+\end{proof}
+
+\paragraph{Exact arithmetic.}
+The payment~\eqref{eq:actual-payment} is a continuous random
+variable whenever \(\xi C>\kappa_i\). If exact finite-precision
+output is required, a served bidder of \(\mathcal A_k\) can
+instead be charged its conditional expected payment
+\(\bar P_i/(q_k(S_i)r_i)\), where, for \(C>0\),
+\begin{equation}\label{eq:retention-payment}
+r_i=\min\left\{1,\frac{w_i}{C}\right\},
+\qquad
+\bar P_i
+=\E_\xi\bigl[\mathbf{1}\{\xi C\le w_i\}\max\{\kappa_i,\xi C\}\bigr]
+=\frac{\min\{w_i,C\}^2+\kappa_i^2}{2C},
+\end{equation}
+and the payment is zero if \(C=0\). This is the payment that the
+characterization of \citet{myerson1981optimal} associates with
+the service probability \(r_i\). The allocation and all expected
+payments are unchanged, so the welfare guarantee, truthfulness
+in expectation, and false-name-proofness in expectation are
+preserved. Since \(\kappa_i\le\min\{w_i,C\}\) by
+Lemma~\ref{lem:greedy}(b), we have \(\bar P_i\le w_ir_i\); this
+payment is therefore at most \(b_i\), and the mechanism remains
+ex-post individually rational. It is no longer universally
+truthful, because a winner's payment then depends on its own
+bid. For rational reports, \(q_k(S)\) has denominator
+\((2k)^{|S|}\), so weights, service probabilities, and these
+payments have polynomial bit length. The reserve lottery can be
+implemented by sampling among the at most \(|G|+1\) intervals
+determined by the rational thresholds \(r_i\), and standard
+exact rational sampling has expected polynomial bit complexity.
+
+\paragraph{Scope of the result.}
+The false-name guarantee is in expectation, with the bidder
+liable for the payments of all its aliases. The deletion step
+does not impose an extension of independence of irrelevant
+goods: adding a privately desired good changes the probability
+that the entire target survives. Theorem~\ref{thm:thinning} uses
+nothing about greedy or about packing beyond exactness, and
+Theorem~\ref{thm:reserve} isolates the single inequality that a
+reserve law must satisfy; we expect both to be useful beyond the
+present mechanism.
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{sample-bibliography}
+\end{document}

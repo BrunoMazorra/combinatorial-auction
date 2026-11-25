@@ -1,0 +1,1234 @@
+% ARCHIVED: original randomized mechanism (l_q load program + priority sampler).
+% Moved out of main.tex on 2026-11-24, when it was replaced by the
+% greedy random-availability mechanism. Kept verbatim (main.tex lines 221-1425
+% of the comb_auction_ec draft) so the construction and proofs are preserved.
+% Compiles standalone from this directory (pdflatex, bibtex, pdflatex x2).
+% References to the Model section (Section "Model" of main.tex) are not resolved here.
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm,bbm}
+\usepackage{xcolor}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{definition}[theorem]{Definition}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\one}{\mathbb{1}}
+\newcommand{\OPT}{\mathrm{OPT}}
+\newcommand{\bruno}[1]{{\color{red}Bruno: #1}}
+\title{Archived: randomized mechanism via an $\ell_q$ load program and a priority sampler}
+\author{Bruno Mazorra}
+\date{}
+\begin{document}
+\maketitle
+
+\section{Randomized}
+
+There are $m\ge1$ indivisible goods. A report is a pair $(S_i,b_i)$,
+where $\varnothing\ne S_i\subseteq[m]$ and $b_i\ge0$.
+Each report has a distinct identity.
+Every served identity receives exactly its reported bundle.
+\bruno{This paragraph we do not need it, seems obvios, we already defined FNP in expectation, and this will be obvious once the mechanism is defined. tldr: redundant}
+A physical bidder with type $(T,v)$ obtains value $v$ if the union
+of the bundles allocated to its identities contains $T$, and zero
+otherwise. It pays the sum of their transfers.
+All reports are committed before the mechanism's randomness is
+realized, and all assessed transfers are paid.
+False-name-proofness means that truthful participation maximizes
+expected utility against every finite family of replacement
+identities, with no bound on the family's size.
+
+Fix public parameters
+\begin{equation}
+\label{eq:parameters}
+2<p\le3,
+\qquad
+q=\frac p{p-1},
+\qquad
+\alpha>0,
+\qquad
+\beta:=\alpha^p\le\frac{p-2}{6(p-1)}.
+\end{equation}
+For a profile $\theta$ with $n$ reports, let
+$A_{gi}=\mathbf{1}\{g\in S_i\}$ and define
+\begin{align}
+L&=Ax,
+&
+\Phi(L)&=\sum_{g=1}^m L_g^q,
+\nonumber\\
+H(\theta)
+&=\max\{b\cdot x:x\ge0,\ \Phi(Ax)\le1\},
+\label{eq:program}\\
+B(\theta)&=\max_i b_i,
+&
+W(\theta)&=\max\{B(\theta),\alpha H(\theta)\}.
+\label{eq:support}
+\end{align}
+Empty-profile values are zero.
+The load body is compact: every coordinate is at most one because
+every reported bundle is nonempty.
+
+\bruno{Is it really neaded to present the priority smapler here? Probably we just need the existence but how is constructed is unecesery.}
+\paragraph{Priority sampler.}
+For any feasible coordinate vector $x$, define
+\[
+G_{ij}=
+\begin{cases}
+1,& S_i\cap S_j\ne\varnothing,\\
+0,& S_i\cap S_j=\varnothing,
+\end{cases}
+\]
+and let $D_x$ be the diagonal matrix with diagonal entries
+$x_1,\ldots,x_n$. In particular, $G_{ii}=1$.
+Define the rate vector by the linear system
+\begin{equation}
+\label{eq:rates}
+\gamma=\alpha x+\alpha D_xG\gamma.
+\end{equation}
+Draw independent exponential clocks: $Y_0$ has rate $1$, and
+$Y_i$ has rate $\gamma_i$ for each identity $i$.
+A zero-rate clock is identically $+\infty$.
+Serve identity $i$ exactly when
+\begin{equation}
+\label{eq:priority-rule}
+Y_i<Y_0
+\quad\text{and}\quad
+Y_i<Y_j
+\quad\text{for every }j\ne i\text{ with }G_{ij}=1.
+\end{equation}
+The clock $Y_0$ stops the process.
+Lemma~\ref{lem:sampler} proves that the rates exist, are
+nonnegative, and give service probability $\alpha x_i$.
+
+\paragraph{Allocation.}
+If $B\ge\alpha H$, serve one highest bidder, breaking ties by a
+fixed order of identity labels.
+Otherwise choose the minimum-Euclidean-norm maximizer of
+\eqref{eq:program} and apply the priority sampler.
+Write $z_i$ for the service probability.
+On the lottery branch, $z_i=\alpha x_i$.
+Empty and all-zero profiles receive nothing and pay nothing.
+
+\paragraph{Payments.}
+Expected payments are
+\begin{equation}
+\label{eq:payments}
+\pi_i=W(\theta\setminus i)-W(\theta)+b_i z_i,
+\end{equation}
+using the same parameters in every deletion profile.
+An unserved identity pays nothing.
+Conditional on service and $b_i z_i>0$, charge $b_i$ with a fresh
+probability $\pi_i/(b_i z_i)$, and otherwise charge zero.
+The bounds $0\le\pi_i\le b_i z_i$ are proved below.
+
+\begin{theorem}
+\label{thm:main}
+Under \eqref{eq:parameters}, the mechanism is ex-post feasible,
+false-name-proof in expectation against every finite family of
+reports, and therefore truthful in expectation jointly in target
+and value.
+It is ex-post individually rational for truthful bidders and makes
+no positive transfers.
+Its worst-case welfare fraction is exactly
+\[
+\inf_{\theta:\mathrm{OPT}(\theta)>0}
+\frac{\mathbb{E}[\mathrm{SW}(\theta)]}{\mathrm{OPT}(\theta)}
+=
+\max\left\{\frac1m,\alpha m^{-1/q}\right\}.
+\]
+\end{theorem}
+
+
+\section{The priority sampler}
+
+\begin{lemma}
+\label{lem:sampler}
+Let $1<q\le2$, $0<\alpha<1$, and $x\ge0$ satisfy $\Phi(Ax)\le1$.
+The rate system \eqref{eq:rates} has a unique nonnegative solution.
+The priority sampler is feasible and satisfies
+\begin{equation}
+\label{eq:sampler-bounds}
+\Pr(i\text{ served})=\alpha x_i,
+\qquad
+\Pr(i,j\text{ both served})\le2\alpha^2x_ix_j
+\quad(i\ne j).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Put $S=D_x^{1/2}GD_x^{1/2}$.
+Since $G$ is a symmetric zero-one matrix,
+\begin{equation}
+\label{eq:spectral}
+\|S\|_2^2
+\le\|S\|_F^2
+=\sum_{i,j}G_{ij}x_ix_j
+\le\sum_gL_g^2
+\le\sum_gL_g^q
+\le1.
+\end{equation}
+The penultimate inequality uses $L_g\le1$ and $q\le2$.
+On positive coordinates, $D_xG$ is similar to $S$;
+zero coordinates have zero rates.
+Thus the solution exists uniquely and is the nonnegative series
+\begin{equation}
+\label{eq:neumann}
+\gamma
+=\alpha(I-\alpha D_xG)^{-1}x
+=\sum_{k\ge0}\alpha^{k+1}(D_xG)^kx.
+\end{equation}
+
+Conflicting identities cannot both precede one another, so the
+allocation is feasible.
+Put $d_i=1+\sum_jG_{ij}\gamma_j$.
+Identity $i$ is served exactly when its clock is first among its
+closed neighbourhood and the stopping clock.
+The exponential-race formula and \eqref{eq:rates} give
+\[
+\Pr(i\text{ served})
+=\frac{\gamma_i}{d_i}
+=\alpha x_i.
+\]
+
+For the pair bound, conflicting pairs have joint probability zero,
+as do pairs with a zero rate.
+Consider a nonconflicting positive-rate pair $i,j$, and put
+\[
+s_{ij}
+=1+\sum_{k:\,G_{ik}=G_{jk}=1}\gamma_k,
+\qquad
+R_{ij}=d_i+d_j-s_{ij}.
+\]
+Here $s_{ij}$ is the total rate of shared competitors, including
+the stopping clock, and $R_{ij}$ is the total rate in the union
+of the two races.
+For both identities to be served, the first clock in this union
+must be $i$ or $j$.
+Conditional on $i$ being first, memorylessness gives probability
+$\gamma_j/d_j$ that $j$ wins its remaining race.
+Hence
+\begin{align*}
+\Pr(i,j\text{ both served})
+&=
+\frac{\gamma_i}{R_{ij}}\frac{\gamma_j}{d_j}
++
+\frac{\gamma_j}{R_{ij}}\frac{\gamma_i}{d_i}\\
+&=
+\alpha^2x_ix_j
+\frac{d_i+d_j}{d_i+d_j-s_{ij}}
+\le2\alpha^2x_ix_j,
+\end{align*}
+since $s_{ij}\le\min\{d_i,d_j\}$.
+\end{proof}
+
+
+\section{Payment identities and load bounds}
+
+\begin{lemma}
+\label{lem:parameters}
+Under \eqref{eq:parameters}, $\beta\le1/12$, $\alpha<1/2$, and,
+with
+\[
+\kappa:=\frac1{p(1-\beta)^q},
+\]
+we have
+\begin{equation}
+\label{eq:kappa}
+\kappa\le\frac12,
+\qquad
+\frac{\kappa}{1-2\beta}\le\frac{1-2\beta}{q}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+The parameter bound gives $\beta\le1/12$ and
+$\alpha=\beta^{1/p}\le\beta^{1/3}<1/2$.
+Since $q\le2$ and $\beta\le(p-2)/(2p)$,
+\[
+p(1-\beta)^q
+\ge p(1-2\beta)
+\ge2.
+\]
+Also,
+\[
+(p-1)(1-\beta)^q(1-2\beta)^2
+\ge(p-1)(1-2\beta)^3
+\ge(p-1)(1-6\beta)
+\ge1.
+\]
+These are the two inequalities in \eqref{eq:kappa}.
+\end{proof}
+
+\begin{lemma}
+\label{lem:payments}
+The expected reported welfare of the selected allocation is
+$W(\theta)$, and
+\begin{equation}
+\label{eq:payment-bounds}
+W(\theta)-b_i z_i
+\le W(\theta\setminus i)
+\le W(\theta),
+\qquad
+0\le\pi_i\le b_i z_i.
+\end{equation}
+For external reports $E$ and truthful report $t=(T,v)$,
+\begin{equation}
+\label{eq:truthful-utility}
+U_{\rm truth}
+=W(E\cup t)-W(E)
+\ge\max\{0,v-W(E)\}.
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Reported welfare is $B$ on the single-winner branch and
+$\alpha b\cdot x=\alpha H$ on the lottery branch.
+Adding reports cannot decrease $H$ or $B$, which proves the upper
+deletion bound.
+On the lottery branch, removing coordinate $i$ leaves a feasible
+vector for the deletion profile, with objective $H-b_ix_i$.
+Therefore
+\[
+W(\theta\setminus i)
+\ge\alpha(H-b_ix_i)
+=W-b_i z_i.
+\]
+The single-winner branch is immediate.
+This argument preserves feasible coordinates and their welfare;
+it does not assert that deleting a positive-rate identity
+preserves the old joint lottery.
+
+The payment bounds follow from \eqref{eq:payments}.
+For truthful participation, substituting $b_t=v$ into that formula
+gives $U_{\rm truth}=W(E\cup t)-W(E)$ directly.
+Finally, $W(E\cup t)\ge\max\{v,W(E)\}$.
+\end{proof}
+
+\begin{lemma}
+\label{lem:kkt}
+On a selected lottery branch with positive objective, let $x$ be
+its optimizer, $L=Ax$, and
+\[
+\mu_g=L_g^{q-1},
+\qquad
+\mu(S)=\sum_{g\in S}\mu_g,
+\qquad
+\delta_i=\frac{b_ix_i}{H}.
+\]
+Then
+\begin{equation}
+\label{eq:kkt}
+\Phi(L)=1,
+\qquad
+\frac{b_i}{H}\le\mu(S_i),
+\qquad
+\frac{b_i}{H}=\mu(S_i)\text{ if }x_i>0,
+\end{equation}
+and
+\begin{equation}
+\label{eq:caps}
+\delta_i=x_i\mu(S_i),
+\qquad
+\sum_i\delta_i=1,
+\qquad
+b_i z_i=W\delta_i,
+\qquad
+L_g,x_i\le\alpha^{p-1},
+\qquad
+\delta_i\le\beta.
+\end{equation}
+Every positive coordinate has a positive bid.
+\end{lemma}
+
+\begin{proof}
+Homogeneity forces $\Phi(L)=1$.
+A sufficiently small strictly positive vector satisfies the
+constraint strictly, so the KKT conditions apply.
+If $\lambda$ is the resource multiplier, stationarity gives
+$b_i\le\lambda q\mu(S_i)$, with equality on positive coordinates.
+Multiplying those equalities by $x_i$ and summing gives
+\[
+H=\lambda q\Phi(L)=\lambda q,
+\]
+proving \eqref{eq:kkt} and the share identities.
+
+The branch condition gives $b_i/H<\alpha$.
+Every loaded good belongs to a positive-coordinate report, so
+\[
+L_g^{q-1}
+\le\mu(S_i)
+=b_i/H
+<\alpha
+\]
+for such a report.
+Thus $L_g\le\alpha^{p-1}$, and $x_i\le L_g$ on every good of $S_i$.
+Consequently
+\[
+\delta_i=x_i\mu(S_i)\le\alpha^p=\beta.
+\]
+If $x_i>0$, then $\mu(S_i)>0$, so its bid is positive by
+\eqref{eq:kkt}.
+\end{proof}
+
+\begin{lemma}[Ordinary deletion]
+\label{lem:ordinary-deletion}
+On the lottery branch, put
+$\ell_i=W(\theta)-W(\theta\setminus i)$.
+Then
+\begin{equation}
+\label{eq:ordinary-deletion}
+0\le\ell_i\le\kappa W\delta_i.
+\end{equation}
+If $x_i=0$, then $\ell_i=\pi_i=0$.
+\end{lemma}
+
+\begin{proof}
+For $0\le d\le L_g$, the inequality $(1-s)^q\le1-s$ gives
+\[
+(L_g-d)^q\le L_g^q-\mu_gd.
+\]
+Deleting coordinate $i$ therefore leaves loads with resource cost
+at most $1-\delta_i$ and objective $H(1-\delta_i)$.
+Scaling the remaining coordinates by $(1-\delta_i)^{-1/q}$ gives
+\[
+H(\theta\setminus i)
+\ge H(1-\delta_i)^{1/p}.
+\]
+Hence
+\[
+\frac{\ell_i}{W}
+\le1-(1-\delta_i)^{1/p}
+=\frac1p\int_0^{\delta_i}(1-s)^{-1/q}\,ds
+\le\frac{\delta_i}{p(1-\beta)^q}
+=\kappa\delta_i.
+\]
+A zero coordinate can be removed without changing the selected
+objective, so its deletion loss and expected payment are zero.
+Its report is not removed from any other counterfactual profile.
+\end{proof}
+
+
+\section{False-name-proofness}
+
+Fix external reports $E$, a true type $(T,v)$, and a finite
+replacement family $K$.
+Let $\theta=E\cup K$, $t=(T,v)$, $O=W(E)$, and $W=W(\theta)$.
+Write $c$ for the family's coverage probability and $P$ for its
+total expected payment.
+Thus $U_{\rm dev}=vc-P$.
+
+On a selected lottery branch, define
+\[
+\Lambda=\sum_{i\in K}\delta_i,
+\qquad
+C=\{i\in K:x_i>0,\ T\subseteq S_i\},
+\qquad
+D=\{i\in K:x_i>0,\ T\not\subseteq S_i\},
+\]
+and put
+\[
+\Lambda_D=\sum_{i\in D}\delta_i,
+\qquad
+e_i=\mu(S_i\setminus T)\ (i\in C),
+\qquad
+E_C=\sum_{i\in C}x_ie_i,
+\qquad
+R=\Lambda_D+E_C.
+\]
+For a set $J$ of reports, write
+\[
+L_J(g)=\sum_{i\in J:g\in S_i}x_i.
+\]
+
+The following is the only estimate that requires redistributing
+overlapping reports.
+Its proof is given in Section~\ref{sec:redistribution}.
+
+\begin{lemma}[Aggregate deletion bound]
+\label{lem:aggregate}
+On the lottery branch,
+\begin{equation}
+\label{eq:aggregate}
+\sum_{i\in K}\ell_i
+\le W-O+\kappa WR.
+\end{equation}
+\end{lemma}
+
+\begin{proof}[Proof of false-name-proofness in
+Theorem~\ref{thm:main}]
+If $c=0$, then
+$U_{\rm dev}\le0\le U_{\rm truth}$
+by NPT and \eqref{eq:truthful-utility}.
+If the single-winner branch is selected and $c>0$, its winner
+is a controlled identity $i$ covering $T$.
+It pays $W(\theta\setminus i)\ge O$ in expectation, so
+\[
+U_{\rm dev}\le v-O\le U_{\rm truth}.
+\]
+It remains to consider a selected lottery with $c>0$.
+
+\paragraph{Step 1: profitability forces a small controlled share.}
+Summing \eqref{eq:payments} and using ordinary deletion,
+\begin{equation}
+\label{eq:payment-share}
+P
+=W\Lambda-\sum_{i\in K}\ell_i
+\ge(1-\kappa)W\Lambda
+\ge\frac{W\Lambda}{2}.
+\end{equation}
+For any $g\in T$, coverage requires a served controlled identity
+containing $g$.
+Thus
+\begin{equation}
+\label{eq:coverage-cap}
+c\le\alpha L_K(g)\le\alpha L_g\le\beta.
+\end{equation}
+Suppose the deviation were profitable.
+Since
+\[
+U_{\rm truth}
+\ge\max\{0,v-O\}
+\ge c(v-O),
+\]
+profitability would imply
+\[
+P<cO\le\beta W.
+\]
+Together with \eqref{eq:payment-share}, this gives
+\begin{equation}
+\label{eq:small-share}
+\Lambda<2\beta.
+\end{equation}
+
+\paragraph{Step 2: merging releases enough load.}
+Set
+\[
+\tau=\frac c\alpha,
+\qquad
+Z=L_K-\tau\mathbf{1}_T,
+\qquad
+F=\mu\cdot Z.
+\]
+We claim
+\begin{equation}
+\label{eq:freed-load}
+Z\ge0,
+\qquad
+F\ge E_C+(1-2\beta)\Lambda_D
+\ge(1-2\beta)R.
+\end{equation}
+
+The identities in $C$ cannot be served together, since they all
+contain the nonempty target $T$.
+Moreover, service of one of them prevents the identities in $D$
+from covering $T$.
+Consequently,
+\[
+c=\alpha\sum_{i\in C}x_i+c_D,
+\]
+where $c_D$ is the probability that $D$ alone covers $T$.
+For each $i\in D$, choose $h_i\in T\setminus S_i$.
+Fix $g\in T$.
+Any cover by $D$ serves some identity $i\in D$ containing $g$
+and another identity containing $h_i$.
+By the pair bound,
+\begin{equation}
+\label{eq:noncarrier-coverage}
+c_D
+\le
+2\alpha^2
+\sum_{\substack{i\in D\\g\in S_i}}x_iL_D(h_i)
+\le2\alpha\beta L_D(g).
+\end{equation}
+Here the two identities are distinct, and the last inequality
+uses $L_D(h_i)\le\alpha^{p-1}$.
+On $T$, we therefore have
+\[
+Z_g=L_D(g)-c_D/\alpha
+\ge(1-2\beta)L_D(g).
+\]
+Outside $T$, $Z_g=L_K(g)$.
+Multiplying by $\mu_g$ and summing proves
+\eqref{eq:freed-load}.
+Also,
+\[
+0\le F\le\mu\cdot L_K=\Lambda<1.
+\]
+
+\paragraph{Step 3: compare payments with a truthful replacement.}
+After replacing the aliases by coordinate $\tau$ on $T$,
+the loads are
+\[
+L'=L_E+\tau\mathbf{1}_T=L-Z\in[0,L].
+\]
+Applying $(1-s)^q\le1-s$ coordinatewise gives
+$\Phi(L')\le1-F$.
+Keep the truthful coordinate fixed and multiply every external
+coordinate by $1+F/q$.
+The resulting loads are at most $(1+F/q)L'$, and hence are feasible:
+\[
+\Phi\bigl((1+F/q)L_E+\tau\mathbf{1}_T\bigr)
+\le(1+F/q)^q(1-F)
+\le e^F(1-F)
+\le1.
+\]
+The sampler on these coordinates serves the truthful report with
+probability $\alpha\tau=c$.
+The external reports' original expected welfare is
+$W(1-\Lambda)$, so the feasible coordinates imply
+\begin{equation}
+\label{eq:truthful-replacement}
+U_{\rm truth}
+\ge
+vc+\left(1+\frac Fq\right)W(1-\Lambda)-O.
+\end{equation}
+This uses only that $H(E\cup t)$ is at least the objective of
+any feasible coordinate vector; the mechanism need not select
+this particular vector.
+
+On the other hand, the aggregate deletion bound gives
+\begin{equation}
+\label{eq:aggregate-payment}
+P
+=W\Lambda-\sum_{i\in K}\ell_i
+\ge O-W(1-\Lambda)-\kappa WR.
+\end{equation}
+Combining \eqref{eq:truthful-replacement},
+\eqref{eq:aggregate-payment}, and \eqref{eq:freed-load},
+\begin{align*}
+U_{\rm dev}-U_{\rm truth}
+&\le
+\kappa WR-\frac FqW(1-\Lambda)\\
+&\le
+WF\left(
+\frac{\kappa}{1-2\beta}-\frac{1-\Lambda}{q}
+\right)
+\le0.
+\end{align*}
+The final inequality follows from \eqref{eq:kappa} and
+$\Lambda<2\beta$.
+This contradicts profitability.
+The argument applies to every finite alias family, including
+the empty family.
+\end{proof}
+
+
+\section{The redistribution estimate}
+\label{sec:redistribution}
+
+\begin{proof}[Proof of Lemma~\ref{lem:aggregate}]
+Ordinary deletion bounds the contribution of $D$ by
+$\kappa W\Lambda_D$.
+It is therefore enough to prove
+\begin{equation}
+\label{eq:carrier-goal}
+\sum_{i\in C}\ell_i
+\le W-O+\kappa WE_C.
+\end{equation}
+For every $i\in K$, the external profile survives deletion, so
+\begin{equation}
+\label{eq:absorb}
+\ell_i\le W-O.
+\end{equation}
+If $C$ is empty or a singleton, \eqref{eq:carrier-goal} is
+immediate.
+Assume $|C|\ge2$ and put $a_r=e_r/x_r$ for $r\in C$.
+
+\paragraph{A quadratic bound for one redistribution.}
+Delete $i\in C$ and redistribute its coordinate within $C$
+using a vector $h$ with
+\[
+h_i=-x_i,
+\qquad
+h_r\ge0\ (r\ne i),
+\qquad
+\sum_{r\in C}h_r=0,
+\]
+with all other coordinates unchanged.
+The load change $d=Ah$ vanishes on $T$.
+Weighted Cauchy--Schwarz gives
+\begin{equation}
+\label{eq:diagonal-bound}
+Q(h):=\sum_{g:L_g>0}L_g^{q-2}d_g^2
+\le
+\sum_{r\in C}\frac{e_r}{x_r}h_r^2
+=
+\sum_{r\in C}a_rh_r^2.
+\end{equation}
+Indeed, on each extra good,
+\[
+\left(\sum_{r\in C:g\in S_r}h_r\right)^2
+\le
+L_g\sum_{r\in C:g\in S_r}\frac{h_r^2}{x_r}.
+\]
+Multiply by $L_g^{q-2}$ and sum outside $T$.
+
+Write $a=\mu\cdot(L+d)$.
+KKT on the changed positive coordinates gives
+$b\cdot(x+h)=Ha$, and nonnegative additions imply
+\[
+a\ge1-\delta_i\ge1-\beta>0.
+\]
+For $s\ge-1$ and $1<q\le2$,
+\[
+(1+s)^q\le1+qs+(q-1)s^2.
+\]
+This follows by weighted AM--GM from
+\[
+u^q\le(2-q)u+(q-1)u^2
+\qquad(u\ge0).
+\]
+Applying it on the loaded goods, and using convexity of $a^q$,
+yields
+\[
+\Phi(L+d)
+\le1+q(a-1)+(q-1)Q(h)
+\le a^q+(q-1)Q(h).
+\]
+Zero-load goods do not change because $h$ is supported on
+positive coordinates.
+Normalize $x+h$ to the load boundary to obtain
+\begin{align*}
+\frac{H(\theta\setminus i)}H
+&\ge
+\left(1+\frac{(q-1)Q(h)}{a^q}\right)^{-1/q}\\
+&\ge
+1-\frac{Q(h)}{pa^q}
+\ge1-\kappa Q(h).
+\end{align*}
+Since $W(\theta\setminus i)\ge\alpha H(\theta\setminus i)$,
+\begin{equation}
+\label{eq:redistribution-loss}
+\ell_i
+\le\kappa WQ(h)
+\le\kappa W\sum_{r\in C}a_rh_r^2.
+\end{equation}
+
+\paragraph{A zero extra-good price.}
+If $a_j=0$ for some $j\in C$, use
+\[
+h^{(i)}=x_i(\mathbf{1}_j-\mathbf{1}_i)
+\qquad(i\ne j).
+\]
+Then \eqref{eq:redistribution-loss} gives
+$\ell_i\le\kappa W x_ie_i$.
+Absorb $\ell_j$ using \eqref{eq:absorb} and sum to obtain
+\eqref{eq:carrier-goal}.
+
+\paragraph{Positive extra-good prices.}
+Otherwise every $a_r>0$.
+Define
+\[
+\lambda_r
+=
+\frac{a_r^{-1}}{\sum_{s\in C}a_s^{-1}},
+\qquad
+\rho
+=
+\left(\sum_{s\in C}a_s^{-1}\right)^{-1}.
+\]
+Then $\sum_r\lambda_r=1$, $0<\lambda_r<1$, and
+$a_r\lambda_r=\rho$.
+For each $i\in C$, use
+\[
+h^{(i)}
+=
+\frac{x_i}{1-\lambda_i}(\lambda-\mathbf{1}_i).
+\]
+This deletes $i$ and redistributes its coordinate among the
+other carriers.
+The identity
+\[
+\sum_ra_r(\lambda_r-\mathbf{1}\{r=i\})^2
+=
+\rho-2\rho+a_i
+=
+a_i(1-\lambda_i)
+\]
+gives
+\[
+(1-\lambda_i)\ell_i
+\le
+\kappa W(1-\lambda_i)
+\sum_ra_r(h_r^{(i)})^2
+=
+\kappa W x_ie_i.
+\]
+Summing these bounds, and then using \eqref{eq:absorb},
+\begin{align*}
+\sum_{i\in C}\ell_i
+&=
+\sum_{i\in C}(1-\lambda_i)\ell_i
++
+\sum_{i\in C}\lambda_i\ell_i\\
+&\le
+\kappa WE_C+W-O.
+\end{align*}
+This proves \eqref{eq:carrier-goal} and the aggregate deletion
+bound.
+\end{proof}
+
+
+\section{Welfare and a rational parameter schedule}
+
+\begin{proof}[Completion of Theorem~\ref{thm:main}]
+Feasibility is Lemma~\ref{lem:sampler} and the single-winner rule.
+The payment bounds make the realized payment rule well defined.
+A served truthful bidder pays either zero or its value,
+and an unserved bidder pays zero.
+Thus truthful ex-post IR and NPT hold.
+FNP was proved above; its one-identity special case gives joint
+target-and-value truthfulness.
+
+Let $J$ be a welfare-optimal packing.
+Giving its winners coordinates $m^{-1/q}$ and all other reports
+coordinate zero is feasible, so
+\[
+H\ge m^{-1/q}\mathrm{OPT}.
+\]
+Also $|J|\le m$, whence $B\ge\mathrm{OPT}/m$.
+Thus
+\[
+W
+\ge
+\max\{m^{-1},\alpha m^{-1/q}\}\mathrm{OPT}.
+\]
+For $m$ disjoint unit-bid singletons,
+$H=m^{1/p}$, $B=1$, and $\mathrm{OPT}=m$.
+This instance attains equality in the claimed worst-case fraction.
+\end{proof}
+
+\begin{corollary}
+\label{cor:schedule}
+For $m\ge1$, set
+\[
+k=\max\{1,\lceil\log_2m\rceil\},
+\qquad
+p=2+\frac1k,
+\qquad
+q=\frac{2k+1}{k+1},
+\qquad
+a=\frac1{\lceil\sqrt{6(k+1)}\rceil}.
+\]
+After reports are fixed, draw
+$\alpha\sim\operatorname{Unif}[a/2,a]$
+independently of them, and reuse that same scale in every
+deletion profile.
+The resulting mechanism has all the incentive and feasibility
+properties of Theorem~\ref{thm:main}, and approximation ratio
+at most
+\[
+\min\left\{m,\frac4{3a}m^{1/q}\right\}
+\le
+\frac43\,2^{1/4}
+\lceil\sqrt{6(k+1)}\rceil\sqrt m
+=
+O\!\left(\sqrt{m\log(m+1)}\right).
+\]
+\end{corollary}
+
+\begin{proof}
+For every realized scale,
+\[
+\alpha^p
+\le a^2
+\le\frac1{6(k+1)}
+=
+\frac{p-2}{6(p-1)},
+\]
+so the theorem applies conditional on that scale.
+Averaging preserves FNP.
+Also $\mathbb{E}[\alpha]=3a/4$ and
+\[
+m^{1/q}
+=
+\sqrt m\,m^{1/(4k+2)}
+\le2^{1/4}\sqrt m.
+\]
+The welfare bound follows.
+\end{proof}
+
+
+\section{Polynomial-time implementation}
+\label{sec:computation}
+\bruno{What is meaninfully new here? It feels like we are just citing relevant work and redoing. Couldnt this eciton just be two paragraph, citing proper work that meks our mechanism by poly-time?}
+
+We implement the mechanism on explicitly encoded targets and
+nonnegative rational bids.
+Let $\ell$ denote the total binary input length, including the
+incidence matrix and all submitted identities.
+We use the rational parameter schedule of
+Corollary~\ref{cor:schedule}.
+Runtime is measured in bit operations of a randomized Turing
+machine with independent fair bits.
+
+The implementation uses standard weak convex optimization
+\cite[Chapters~3--5]{compGLS1993}, Hoffman's error bound
+\cite{compHoffman1952}, and adaptive exact sampling.
+The latter follows the approach of Dughmi, Roughgarden, and
+Yan~\cite[Appendix~B, especially Claim~B.3]{compDRY2011}:
+approximate real quantities only until they determine an exact
+random decision.
+We verify below the numerical hypotheses for our load program
+and priority sampler; we do not assume an exact-real
+optimization oracle.
+
+\begin{proposition}[Exact expected-polynomial-time implementation]
+\label{prop:implementation}
+With the parameters of Corollary~\ref{cor:schedule}, the allocation
+and realized payments can be sampled exactly in expected time
+polynomial in $\ell$ on every rational report profile.
+The algorithm terminates almost surely and outputs payments
+in $\{0,b_i\}$ for each identity $i$.
+Its output has exactly the law specified by the mechanism,
+so it preserves all the incentive and welfare guarantees
+on this input domain.
+\end{proposition}
+
+\subsection{Certified convex optimization}
+
+A scalar is called precision-polynomial computable if a certified
+rational interval of width at most $2^{-r}$ can be obtained in
+time polynomial in $\ell+r$.
+For a vector, we require a rational approximation with certified
+Euclidean error at most $2^{-r}$.
+In particular, the dependence is polynomial in the number of
+accuracy bits, not in $2^r$.
+
+\begin{lemma}
+\label{lem:certified-optimization}
+The support value $H(\theta)$, all deletion values
+$H(\theta\setminus i)$, and the minimum-Euclidean-norm maximizer
+$x^*(\theta)$ of \eqref{eq:program} are precision-polynomial
+computable.
+\end{lemma}
+
+\begin{proof}
+The empty and all-zero cases are immediate, with minimum-norm
+optimizer zero.
+Otherwise normalize the largest positive bid to one.
+This preserves $x^*$, and restoring the rational scaling factor
+costs only polynomially many additional accuracy bits.
+In the rest of this proof, $b$ and $H$ are normalized.
+Write
+\[
+\mathcal K=\{x\ge0:\Phi(Ax)\le1\}.
+\]
+
+\paragraph{Support values.}
+The body $\mathcal K$ is contained in $[0,1]^n$ and contains
+the Euclidean ball of radius $1/(8mn)$ about the point whose
+coordinates are all $1/(4mn)$.
+Moreover, $1/m\le H\le m$.
+The lower bound is obtained by giving a highest bidder
+coordinate $1/m$; the upper bound follows from
+\[
+b\cdot x
+\le\sum_i x_i
+\le\sum_g(Ax)_g
+\le m.
+\]
+
+Under Corollary~\ref{cor:schedule}, the numerator and denominator
+of $q$ are $O(\log(m+1))$.
+At rational nonnegative arguments, the powers $t^q$ and
+$t^{q-1}$ have certified polynomial-time approximations by
+bisection and integer-power comparisons.
+Thus both $\Phi(Ax)$ and its gradient
+$qA^{\mathsf T}(Ax)^{q-1}$ admit certified evaluations.
+A tangent-plane inequality with an error margin separates
+points whose constraint violation exceeds the requested weak
+tolerance; nonnegativity has exact rational separators.
+The radius bounds above therefore allow us to apply standard
+weak separation and optimization
+\cite[Chapters~3--5]{compGLS1993}.
+
+We obtain certified support intervals and rational feasible
+points with any prescribed objective gap in time polynomial
+in the input length and the number of accuracy bits.
+To enforce actual feasibility, clamp negative coordinates
+to zero and divide by a certified rational upper bound on
+$\max\{1,\|Ax\|_q\}$.
+Tightening the weak tolerance by polynomially many additional
+bits makes this adjustment smaller than the prescribed
+objective error.
+The same argument applies to every deletion profile and to
+the concave objective
+\[
+b\cdot x-\tau\|x\|_2^2
+\]
+for positive rational $\tau$, with polynomial dependence on
+the encoding length of $\tau$.
+
+\paragraph{The specified optimizer.}
+The optimizing load vector $L^*$ is unique:
+two distinct optimal load vectors would have a midpoint of
+norm strictly below one, which could be scaled up to increase
+the positive objective.
+Hence the optimal face is the polyhedron
+\[
+F^*=\{x\ge0:Ax=L^*,\ b\cdot x=H\}.
+\]
+Its coefficient matrix $C=(A;b^{\mathsf T})$ is rational,
+although its right-hand side need not be.
+Hoffman's error bound \cite{compHoffman1952} gives a constant
+$K_C$, independent of that right-hand side, such that
+\begin{equation}
+\label{eq:comp-hoffman}
+\operatorname{dist}(x,F^*)
+\le
+K_C\bigl(\|Ax-L^*\|_2+|b\cdot x-H|\bigr)
+\qquad(x\ge0).
+\end{equation}
+A valid $K_C$ has a computable bound
+$2^{\operatorname{poly}(\ell)}$.
+Indeed, use the standard bound by reciprocal smallest singular
+values of independent selections of constraint normals from
+$C,-C,-I$.
+Let $D$ be the product of the denominators of the normalized
+bids.
+A selection of $r$ independent rows has a nonzero
+$r$-by-$r$ minor of absolute value at least $D^{-r}$,
+while all its singular values are at most $n$.
+Thus the conservative bound
+\[
+K_C\le2(nD)^n
+\]
+suffices, and its logarithm is polynomial in $\ell$.
+The optimal Hoffman constant need not be computed.
+
+Let $x\in\mathcal K$ have objective gap
+$H-b\cdot x\le\eta$, and set $\mu=(L^*)^{q-1}$.
+The KKT relations give
+\[
+\mu\cdot Ax
+\ge b\cdot x/H
+\ge1-\eta/H,
+\qquad
+\mu\cdot L^*=1.
+\]
+Since $t^q$ is $q(q-1)$-strongly convex on $[0,1]$,
+\[
+1\ge\Phi(Ax)
+\ge
+1+q\mu\cdot(Ax-L^*)
++\frac{q(q-1)}2\|Ax-L^*\|_2^2.
+\]
+Consequently,
+\begin{equation}
+\label{eq:comp-load-error}
+\|Ax-L^*\|_2^2
+\le\frac{2\eta}{H(q-1)}.
+\end{equation}
+Together with \eqref{eq:comp-hoffman}, $H\ge1/m$, and
+$q-1\ge1/2$, this gives
+\[
+\operatorname{dist}(x,F^*)
+\le2^{Q_1(\ell)}\sqrt{\eta}
+\qquad(0<\eta\le1),
+\]
+where $Q_1$ is an effectively computable polynomial.
+
+For rational $0<\tau\le1/n$, let $x_\tau$ be the unique
+maximizer of
+\[
+b\cdot x-\tau\|x\|_2^2
+\qquad\text{over }x\in\mathcal K.
+\]
+Comparison with $x^*$ yields
+\[
+0\le H-b\cdot x_\tau\le n\tau,
+\qquad
+\|x_\tau\|_2\le\|x^*\|_2\le\sqrt n.
+\]
+If $y$ is a nearest point of $F^*$ to $x_\tau$, put
+\[
+d=\|y-x_\tau\|_2
+\le2^{Q_2(\ell)}\sqrt{\tau}.
+\]
+The projection characterization of $x^*$ gives
+\[
+\|y-x^*\|_2^2
+\le
+\|y\|_2^2-\|x^*\|_2^2
+\le
+2\sqrt n\,d+d^2.
+\]
+Thus, for an effectively computable polynomial $Q_3$,
+\begin{equation}
+\label{eq:comp-canonical-error}
+\|x_\tau-x^*\|_2
+\le2^{Q_3(\ell)}\tau^{1/4}.
+\end{equation}
+Choose a dyadic $\tau$ with
+\[
+\log_2(1/\tau)
+=
+\operatorname{poly}(\ell)+O(r)
+\]
+so that this bound is at most $2^{-r-1}$.
+The regularized objective is $2\tau$-strongly concave, so a
+feasible solution with objective gap at most $\tau2^{-2r-2}$
+is within $2^{-r-1}$ of $x_\tau$.
+The weak-optimization procedure above computes such a solution
+in time polynomial in $\ell+r$.
+It is therefore a certified $2^{-r}$-approximation to $x^*$.
+
+The regularizer is only a computational device for evaluating
+the exact minimum-norm tie rule; it does not change the
+mechanism.
+\end{proof}
+
+\subsection{Exact allocation and payments}
+
+\begin{proof}[Proof of Proposition~\ref{prop:implementation}]
+Use Lemma~\ref{lem:certified-optimization} and reveal independent
+uniform random variables through their binary digits.
+A comparison with a precision-polynomial computable threshold
+is resolved as soon as certified intervals determine its sign.
+With interval widths $O(2^{-r})$, a fresh uniform draw lies in
+an unresolved interval with probability $O(2^{-r})$.
+This is the adaptive exact-sampling argument of Dughmi,
+Roughgarden, and Yan~\cite[Appendix~B]{compDRY2011}.
+We verify its application to each decision.
+
+The empty and all-zero profiles are handled directly.
+Otherwise, throughout the numerical computation, normalize
+the largest positive bid to one and retain the original
+rational bids for the final transfers.
+
+\paragraph{The allocation branch.}
+Generate $\alpha=(a/2)(1+V)$ from a lazy uniform
+$V\in[0,1]$.
+The quantities $H$ and $x^*$ do not depend on $\alpha$.
+Since $H\ge1/m$ and $1/a=O(\sqrt{\log(m+1)})$,
+interval refinement resolves $\alpha H>B$ with unresolved
+probability at most
+$\operatorname{poly}(\ell)2^{-r}$
+at precision stage $r$.
+Equality has probability zero; ties among the highest rational
+bids are resolved exactly by the prescribed identity order.
+
+Retain this same lazy scale in all deletion counterfactuals.
+Each value
+\[
+W_{-i}=\max\{B_{-i},\alpha H_{-i}\}
+\]
+is approximated by taking maxima of interval enclosures,
+without deciding whether its two arguments are equal.
+
+\paragraph{Priority rates and allocation.}
+Let $D_{x^*}$ be the diagonal matrix with diagonal entries
+$x_1^*,\ldots,x_n^*$, and put
+\[
+s=(\sqrt{x_i^*})_i,
+\qquad
+S=D_{x^*}^{1/2}GD_{x^*}^{1/2}.
+\]
+Then
+\[
+\gamma
+=
+\alpha D_{x^*}^{1/2}(I-\alpha S)^{-1}s.
+\]
+By \eqref{eq:spectral} and Lemma~\ref{lem:parameters},
+$\|S\|_2\le1$ and $\alpha<1/2$, so the inverse has norm
+at most two.
+Certified square-root approximations and a rational linear
+solve give precision-polynomial approximations to $\gamma$.
+This remains valid at zero coordinates:
+\[
+|\sqrt u-\sqrt v|\le\sqrt{|u-v|}
+\]
+supplies a uniform error bound, so no test of whether
+$x_i^*=0$ is needed.
+The same representation gives
+\[
+\sum_i\gamma_i
+=
+\alpha s^{\mathsf T}(I-\alpha S)^{-1}s
+\le
+\frac{\alpha}{1-\alpha}\sum_i x_i^*
+\le\sqrt m,
+\]
+where
+\[
+\sum_i x_i^*
+\le\sum_gL_g
+\le m^{1/p}
+\le\sqrt m.
+\]
+
+Generate only the order of the exponential clocks.
+Repeatedly choose an unprocessed identity or the stopping
+symbol with probabilities proportional to its rate $\gamma_i$
+or to one, respectively, stopping when the latter is chosen.
+Serve an identity exactly when no conflicting identity
+appeared earlier.
+Every earlier identity blocks its neighbours, including
+identities that were not themselves served.
+This is precisely \eqref{eq:priority-rule}.
+
+There are at most $n+1$ categorical choices.
+Every denominator is at least one, and the rate bound makes
+all cumulative probabilities precision-polynomial computable,
+uniformly over the preceding choices.
+Fresh uniform comparisons therefore sample the allocation
+exactly in expected polynomial time.
+
+\paragraph{Realized payments.}
+For a served identity with $b_i>0$, let
+\[
+d_i=\pi_i/b_i\in[0,z_i]
+\]
+and draw a fresh lazy uniform $V_i\in[0,1]$.
+Charge its original bid exactly when
+\[
+V_i z_i<d_i.
+\]
+This implements the required conditional probability
+$\pi_i/(b_i z_i)$ without division by a potentially tiny
+service probability.
+The quantities $z_i$ and $d_i$ have certified polynomial-time
+approximations: positive rational bid reciprocals have
+polynomial encoding length, and \eqref{eq:payments} uses
+only the already computed support values.
+
+Conditional on the reports and scale, an unresolved payment
+comparison at precision $r$ requires
+\[
+|V_i z_i-d_i|\le C2^{-r}
+\]
+for an absolute constant $C$.
+Conditional on service its probability is at most
+\[
+\min\{1,2C2^{-r}/z_i\}.
+\]
+Service itself has probability $z_i$, so the unconditional
+probability is at most $2C2^{-r}$.
+Thus rare service does not cause excessive expected
+computation.
+Zero-service identities never require this comparison,
+and zero-bid identities pay zero.
+
+At each precision stage the work is polynomial in $\ell+r$.
+Taking a union bound over the polynomially many decisions
+and summing their exponentially decreasing unresolved
+probabilities proves expected polynomial runtime and
+almost-sure termination.
+All resolved comparisons agree with the exact mechanism.
+The output is a feasible allocation and rational payments
+in $\{0,b_i\}$, of polynomial encoding length.
+\end{proof}
+
+This is an expected bit-complexity guarantee on every rational
+input, not a fixed worst-case runtime bound over random tapes.
+Internal quantities are approximated only to determine exact
+random decisions; no fixed numerical rounding error is
+introduced into the incentive inequalities.
+
+
+\bibliographystyle{plain}
+\bibliography{../sample-bibliography}
+\end{document}
